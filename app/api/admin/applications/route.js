@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { getApplications, getMembers, getRoles, readJSON, writeJSON } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET() {
   try {
     const apps = getApplications();

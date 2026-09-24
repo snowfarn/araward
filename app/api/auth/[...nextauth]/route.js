@@ -17,13 +17,18 @@ export const authOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log('[signIn] Provider:', account?.provider, 'User ID:', user?.id, 'Profile ID:', profile?.id);
       if (account?.provider === 'discord' && (profile?.id || user?.id)) {
         try {
           const discordId = profile?.id || user?.id;
           const members = readJSON('members.json') || [];
           const isMember = members.some(m => m.id === discordId);
+          console.log('[signIn] Discord ID:', discordId, 'Is already member:', isMember, 'Total members:', members.length);
+          
           if (!isMember) {
             const apps = readJSON('applications.json') || [];
+            console.log('[signIn] Current applications count:', apps.length);
+            
             let avatarUrl = user?.image || 'https://cdn.discordapp.com/embed/avatars/0.png';
             if (profile?.avatar) {
               const ext = profile.avatar.startsWith('a_') ? 'gif' : 'png';
@@ -41,6 +46,7 @@ export const authOptions = {
                 avatar: avatarUrl,
                 updatedAt: new Date().toISOString()
               };
+              console.log('[signIn] Updated existing application for:', displayName);
             } else {
               apps.push({
                 id: discordId,
@@ -49,11 +55,13 @@ export const authOptions = {
                 avatar: avatarUrl,
                 appliedAt: new Date().toISOString()
               });
+              console.log('[signIn] Created new application for:', displayName);
             }
-            writeJSON('applications.json', apps);
+            const writeResult = writeJSON('applications.json', apps);
+            console.log('[signIn] Write applications result:', writeResult, 'New count:', apps.length);
           }
         } catch (e) {
-          console.error('Error auto-recording application on signIn:', e);
+          console.error('[signIn] ERROR recording application:', e);
         }
       }
       return true;

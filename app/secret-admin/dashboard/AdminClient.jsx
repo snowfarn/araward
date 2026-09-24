@@ -167,6 +167,30 @@ export default function AdminClient({ initialSettings, initialRoles, initialMemb
   const [selectedMemberModal, setSelectedMemberModal] = useState(null);
   const [newBannerInput, setNewBannerInput] = useState('');
 
+  // Client-side auto-refresh applications (poll every 10s)
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        const res = await fetch('/api/admin/applications', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.applications)) {
+            setApplications(data.applications);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch applications:', err);
+      }
+    };
+
+    // Fetch immediately on mount
+    fetchApplications();
+
+    // Poll every 10 seconds
+    const interval = setInterval(fetchApplications, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Security & 1-Hour Session Expiry Enforcement
   useEffect(() => {
     const isAuth = localStorage.getItem('adminAuth') === 'true';

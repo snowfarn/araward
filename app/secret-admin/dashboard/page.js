@@ -1,6 +1,9 @@
 import { getSiteSettings, getRoles, getMembers, getApplications } from '@/lib/data';
 import AdminClient from './AdminClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function AdminDashboardPage() {
   const settings = await getSiteSettings();
   const roles = await getRoles();
