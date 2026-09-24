@@ -27,6 +27,7 @@ import {
   Palette, 
   Music, 
   Image as ImageIcon,
+  Wallpaper,
   CheckCircle2,
   AlertCircle,
   Upload,
@@ -691,6 +692,76 @@ export default function AdminClient({ initialSettings, initialRoles, initialMemb
                       />
                     </label>
                   </div>
+                </div>
+
+                {/* 4.5 Site Global Background Image / GIF */}
+                <div className="sm:col-span-2 p-4 sm:p-5 rounded-3xl bg-white/[0.02] border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                    <label className="text-xs font-semibold text-white/70 uppercase tracking-wider flex items-center gap-1.5">
+                      <Wallpaper size={14} className="text-[#ff2a44]" />
+                      <span>{lang === 'th' ? 'ภาพพื้นหลังเว็บไซต์หลัก (Site Background / GIF)' : 'Main Site Background Image / GIF'}</span>
+                    </label>
+                    <span className="text-[10px] text-cyan-400 font-mono">GLOBAL BACKGROUND</span>
+                  </div>
+
+                  {/* Background Live Preview */}
+                  <div className="relative h-32 sm:h-44 rounded-2xl overflow-hidden border border-white/10 bg-black/60 flex items-center justify-center">
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center transition-all duration-300"
+                      style={{ 
+                        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(4, 4, 7, 0.75)), url(${settings.backgroundUrl || '/banner.png'})` 
+                      }}
+                    />
+                    <div className="relative z-10 px-4 py-2.5 rounded-xl bg-black/70 backdrop-blur-md border border-white/15 text-center shadow-lg">
+                      <p className="text-xs font-bold text-white flex items-center justify-center gap-1.5">
+                        <Wallpaper size={13} className="text-[#ff2a44]" />
+                        <span>{lang === 'th' ? 'ตัวอย่างภาพพื้นหลังหน้าเว็บ (Live Preview)' : 'Live Background Preview'}</span>
+                      </p>
+                      <p className="text-[10px] text-white/60 mt-0.5 font-mono truncate max-w-xs sm:max-w-md">
+                        {settings.backgroundUrl || '/banner.png (ภาพเริ่มต้น)'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+                    <input 
+                      type="text" 
+                      value={settings.backgroundUrl || ''} 
+                      onChange={e => setSettings({ ...settings, backgroundUrl: e.target.value })} 
+                      className="flex-1 bg-black/50 border border-white/10 focus:border-[#ff2a44] rounded-2xl px-4 py-3 text-sm text-white outline-none" 
+                      placeholder="https://... หรือกดอัปโหลดรูปภาพ / ไฟล์ GIF"
+                    />
+
+                    <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-xs font-bold text-white cursor-pointer transition-all shrink-0">
+                      <Upload size={14} />
+                      <span>{uploadingField === 'bg' ? 'กำลังอัปโหลด...' : (lang === 'th' ? 'อัปโหลดภาพพื้นหลัง' : 'Upload Background')}</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(file, url => setSettings({ ...settings, backgroundUrl: url }), 'bg');
+                        }}
+                      />
+                    </label>
+
+                    {settings.backgroundUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setSettings({ ...settings, backgroundUrl: '' })}
+                        className="px-3.5 py-3 rounded-2xl bg-white/5 hover:bg-red-500/20 text-white/50 hover:text-red-400 border border-white/10 text-xs font-semibold transition-all shrink-0 cursor-pointer"
+                        title="Reset to default banner"
+                      >
+                        {lang === 'th' ? 'รีเซ็ต' : 'Reset'}
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-white/40 font-light">
+                    {lang === 'th' 
+                      ? 'ภาพนี้จะแสดงเป็นพื้นหลังของเว็บไซต์ทุกหน้า (หน้าแรกและหน้ารายชื่อสมาชิก) รองรับทั้งรูปภาพทั่วไปและภาพเคลื่อนไหว GIF' 
+                      : 'This background applies to all main pages (Home, Roster). Supports images and animated GIFs.'}
+                  </p>
                 </div>
 
                 {/* 5. Colors Customization (Primary, Text, Contrast) */}
