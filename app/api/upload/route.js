@@ -14,24 +14,44 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Ensure public/uploads directory exists
-    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
+    // Vercel serverless function has a 4.5MB limit
+    if (buffer.length > 4.5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'ไฟล์มีขนาดใหญ่เกินไป (จำกัดไม่เกิน 4MB)' }, { status: 400 });
     }
 
-    // Clean filename and add timestamp
-    const ext = path.extname(file.name) || '';
-    const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
-    const fileName = `${Date.now()}_${baseName}${ext}`;
-    const filePath = path.join(uploadsDir, fileName);
+    const mimeType = file.type || 'image/png';
+    let fileUrl = null;
+    const isVercel = !!process.env.VERCEL;
 
-    fs.writeFileSync(filePath, buffer);
+    // In local dev, save to public/uploads
+    if (!isVercel) {
+      try {
+        const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+
+        const ext = path.extname(file.name) || '';
+        const baseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+        const fileName = `${Date.now()}_${baseName}${ext}`;
+        const filePath = path.join(uploadsDir, fileName);
+
+        fs.writeFileSync(filePath, buffer);
+        fileUrl = `/uploads/${fileName}`;
+      } catch (fsErr) {
+        console.warn('Filesystem write failed, falling back to data URL:', fsErr.message);
+      }
+    }
+
+    // On Vercel (read-only filesystem) or fallback: use Base64 Data URL
+    if (!fileUrl) {
+      fileUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
+    }
 
     return NextResponse.json({ 
       success: true, 
-      url: `/uploads/${fileName}`,
-      fileName 
+      url: fileUrl,
+      fileName: file.name 
     });
   } catch (error) {
     console.error('Upload error:', error);

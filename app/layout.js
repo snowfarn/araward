@@ -5,6 +5,9 @@ import { getSiteSettings } from "@/lib/data";
 import MusicPlayer from "@/components/MusicPlayer";
 import "./globals.css";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const prompt = Prompt({
   variable: "--font-prompt",
   subsets: ["latin", "thai"],
