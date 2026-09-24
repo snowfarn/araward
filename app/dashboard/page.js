@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 import { getMembers, getApplications } from "@/lib/data";
+import { applyToGang } from "@/lib/actions";
 import ClientDashboard from "./ClientDashboard";
 
 export default async function DashboardPage() {
@@ -23,6 +24,17 @@ export default async function DashboardPage() {
       }
       memberData = isMember;
     } else if (isPending) {
+      memberStatus = 'pending';
+    } else {
+      // Auto-submit application when logged into Discord so it immediately appears in Admin
+      const newApp = {
+        id: session.user.id,
+        name: session.user.name || session.user.username || 'Discord User',
+        username: session.user.username || session.user.name || '',
+        avatar: session.user.image || 'https://cdn.discordapp.com/embed/avatars/0.png',
+        appliedAt: new Date().toISOString()
+      };
+      await applyToGang(newApp);
       memberStatus = 'pending';
     }
   }

@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
+import { readJSON, writeJSON } from "@/lib/data";
 
 export const authOptions = {
   providers: [
@@ -15,6 +16,48 @@ export const authOptions = {
     })
   ],
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === 'discord' && (profile?.id || user?.id)) {
+        try {
+          const discordId = profile?.id || user?.id;
+          const members = readJSON('members.json') || [];
+          const isMember = members.some(m => m.id === discordId);
+          if (!isMember) {
+            const apps = readJSON('applications.json') || [];
+            let avatarUrl = user?.image || 'https://cdn.discordapp.com/embed/avatars/0.png';
+            if (profile?.avatar) {
+              const ext = profile.avatar.startsWith('a_') ? 'gif' : 'png';
+              avatarUrl = `https://cdn.discordapp.com/avatars/${discordId}/${profile.avatar}.${ext}?size=256`;
+            }
+            const displayName = profile?.global_name || profile?.username || user?.name || 'Discord User';
+            const username = profile?.username || user?.name || '';
+
+            const existingIdx = apps.findIndex(a => a.id === discordId);
+            if (existingIdx !== -1) {
+              apps[existingIdx] = {
+                ...apps[existingIdx],
+                name: displayName,
+                username,
+                avatar: avatarUrl,
+                updatedAt: new Date().toISOString()
+              };
+            } else {
+              apps.push({
+                id: discordId,
+                name: displayName,
+                username,
+                avatar: avatarUrl,
+                appliedAt: new Date().toISOString()
+              });
+            }
+            writeJSON('applications.json', apps);
+          }
+        } catch (e) {
+          console.error('Error auto-recording application on signIn:', e);
+        }
+      }
+      return true;
+    },
     async jwt({ token, account, profile }) {
       if (account) {
         token.accessToken = account.access_token;
