@@ -368,22 +368,45 @@ export default function AdminClient({ initialSettings, initialRoles, initialMemb
     showToast(lang === 'th' ? 'อัปเดตยศสมาชิกแล้ว' : 'Updated member role');
   };
 
-  // --- APPLICATION MANAGEMENT ---
+  // --- APPLICATION MANAGEMENT (via API for atomic operations) ---
   const approveApp = async (app) => {
-    const newMembers = [...members, { ...app, roleId: roles[0]?.id || 'member' }];
-    const newApps = applications.filter(a => a.id !== app.id);
-    await updateMembers(newMembers);
-    await updateApplications(newApps);
-    setMembers(newMembers);
-    setApplications(newApps);
-    showToast(lang === 'th' ? `อนุมัติ ${app.name} เข้าร่วมแก๊งแล้ว` : `Approved ${app.name}`);
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve', appId: app.id, appData: app })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Sync both applications AND members from server
+        if (Array.isArray(data.applications)) setApplications(data.applications);
+        if (Array.isArray(data.members)) setMembers(data.members);
+        showToast(lang === 'th' ? `อนุมัติ ${app.name} เข้าร่วมแก๊งแล้ว` : `Approved ${app.name}`);
+      } else {
+        showToast(data.error || 'Error approving', 'error');
+      }
+    } catch (err) {
+      showToast('Network error', 'error');
+    }
   };
 
   const rejectApp = async (appId) => {
-    const newApps = applications.filter(a => a.id !== appId);
-    await updateApplications(newApps);
-    setApplications(newApps);
-    showToast(lang === 'th' ? 'ปฏิเสธใบสมัครแล้ว' : 'Application rejected', 'info');
+    try {
+      const res = await fetch('/api/admin/applications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject', appId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (Array.isArray(data.applications)) setApplications(data.applications);
+        showToast(lang === 'th' ? 'ปฏิเสธใบสมัครแล้ว' : 'Application rejected', 'info');
+      } else {
+        showToast(data.error || 'Error rejecting', 'error');
+      }
+    } catch (err) {
+      showToast('Network error', 'error');
+    }
   };
 
   // --- BANNER CAROUSEL HELPERS ---

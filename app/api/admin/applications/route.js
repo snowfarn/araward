@@ -1,17 +1,27 @@
 import { NextResponse } from 'next/server';
-import { getApplications, getMembers, getRoles, readJSON, writeJSON } from '@/lib/data';
-import { revalidatePath } from 'next/cache';
+import { readJSON, writeJSON } from '@/lib/data';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export async function GET() {
   try {
-    const apps = getApplications();
+    const apps = readJSON('applications.json') || [];
+    const members = readJSON('members.json') || [];
+    const memberIds = new Set(members.map(m => m.id));
+    
+    // CRITICAL: Filter out anyone who is already a member
+    const pendingApps = apps.filter(a => !memberIds.has(a.id));
+    
+    // If there were stale entries, clean them up
+    if (pendingApps.length !== apps.length) {
+      writeJSON('applications.json', pendingApps);
+    }
+
     return NextResponse.json({
       success: true,
-      applications: apps,
-      count: apps.length
+      applications: pendingApps,
+      count: pendingApps.length
     }, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate'
@@ -27,6 +37,7 @@ export async function POST(request) {
     const body = await request.json();
     const { action, appId, appData } = body;
 
+    // Always read fresh data
     const apps = readJSON('applications.json') || [];
     const members = readJSON('members.json') || [];
     const roles = readJSON('roles.json') || [];
@@ -37,8 +48,9 @@ export async function POST(request) {
         return NextResponse.json({ success: false, error: 'Application not found' }, { status: 404 });
       }
 
-      // Check if already in members
-      if (!members.some(m => m.id === targetApp.id)) {
+      // CRITICAL: Check if already a member - prevent duplicates
+      const alreadyMember = members.some(m => m.id === targetApp.id);
+      if (!alreadyMember) {
         const cleanSlug = (targetApp.name || '').toLowerCase().replace(/[^a-z0-9_-]/g, '') || targetApp.id;
         const newMember = {
           id: targetApp.id,
@@ -66,27 +78,22 @@ export async function POST(request) {
         writeJSON('members.json', members);
       }
 
-      // Remove from applications
+      // Always remove from applications (even if already member)
       const updatedApps = apps.filter(a => a.id !== targetApp.id);
       writeJSON('applications.json', updatedApps);
 
-      revalidatePath('/secret-admin/dashboard');
-      revalidatePath('/dashboard');
-      revalidatePath('/members');
-
+      // Return updated members too
       return NextResponse.json({
         success: true,
-        message: 'Application approved successfully',
-        applications: updatedApps
+        message: alreadyMember ? 'Already a member, cleaned up application' : 'Application approved successfully',
+        applications: updatedApps,
+        members: members
       });
     }
 
     if (action === 'reject') {
       const updatedApps = apps.filter(a => a.id !== appId);
       writeJSON('applications.json', updatedApps);
-
-      revalidatePath('/secret-admin/dashboard');
-      revalidatePath('/dashboard');
 
       return NextResponse.json({
         success: true,
