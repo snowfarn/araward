@@ -20,16 +20,16 @@ export const authOptions = {
       if (account?.provider === 'discord' && (profile?.id || user?.id)) {
         try {
           const discordId = profile?.id || user?.id;
-          const members = readJSON('members.json') || [];
+          const members = (await readJSON('members.json')) || [];
           const isMember = members.some(m => m.id === discordId);
           
           // Skip entirely if already a member
           if (isMember) {
-            console.log('[signIn] Already a member, skipping application:', discordId);
+            console.log('[signIn] Already a member, skipping:', discordId);
             return true;
           }
 
-          const apps = readJSON('applications.json') || [];
+          const apps = (await readJSON('applications.json')) || [];
           
           let avatarUrl = user?.image || 'https://cdn.discordapp.com/embed/avatars/0.png';
           if (profile?.avatar) {
@@ -41,7 +41,7 @@ export const authOptions = {
 
           const existingIdx = apps.findIndex(a => a.id === discordId);
           if (existingIdx !== -1) {
-            // Already has an application — just update info, don't create duplicate
+            // Already has application — update info only
             apps[existingIdx] = {
               ...apps[existingIdx],
               name: displayName,
@@ -49,7 +49,6 @@ export const authOptions = {
               avatar: avatarUrl,
               updatedAt: new Date().toISOString()
             };
-            console.log('[signIn] Updated existing application for:', displayName);
           } else {
             // Brand new application
             apps.push({
@@ -59,9 +58,8 @@ export const authOptions = {
               avatar: avatarUrl,
               appliedAt: new Date().toISOString()
             });
-            console.log('[signIn] Created new application for:', displayName);
           }
-          writeJSON('applications.json', apps);
+          await writeJSON('applications.json', apps);
         } catch (e) {
           console.error('[signIn] ERROR:', e);
         }

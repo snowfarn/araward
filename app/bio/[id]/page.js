@@ -8,8 +8,8 @@ import Link from 'next/link';
 export async function generateMetadata({ params }) {
   const resolvedParams = await params;
   const { id } = resolvedParams;
-  const member = getMemberByIdOrSlug(id);
-  const settings = getSiteSettings();
+  const member = await getMemberByIdOrSlug(id);
+  const settings = await getSiteSettings();
 
   if (!member) {
     return {
@@ -59,8 +59,8 @@ export async function generateMetadata({ params }) {
 export async function generateViewport({ params }) {
   const resolvedParams = await params;
   const { id } = resolvedParams;
-  const member = getMemberByIdOrSlug(id);
-  const settings = getSiteSettings();
+  const member = await getMemberByIdOrSlug(id);
+  const settings = await getSiteSettings();
 
   return {
     themeColor: member?.primaryColor || settings?.primaryColor || '#ff2a44',
@@ -71,7 +71,7 @@ export default async function BioPage({ params }) {
   const resolvedParams = await params;
   const { id } = resolvedParams;
 
-  const member = getMemberByIdOrSlug(id);
+  const member = await getMemberByIdOrSlug(id);
   if (!member) return notFound();
 
   // If member is banned, lock bio page
@@ -103,12 +103,12 @@ export default async function BioPage({ params }) {
   }
 
   // Track and increment view counter
-  const updatedViews = incrementMemberViews(member.id);
+  const updatedViews = await incrementMemberViews(member.id);
   const displayViews = updatedViews || member.views || 1;
 
-  const roles = getRoles();
+  const roles = await getRoles();
   const role = roles.find(r => r.id === member.roleId);
-  const settings = getSiteSettings();
+  const settings = await getSiteSettings();
 
   const primaryColor = member.primaryColor || role?.color || '#ff2a44';
   const roleColor = (role?.color && role.color !== '#000000') ? role.color : primaryColor;

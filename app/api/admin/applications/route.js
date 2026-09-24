@@ -6,8 +6,8 @@ export const revalidate = 0;
 
 export async function GET() {
   try {
-    const apps = readJSON('applications.json') || [];
-    const members = readJSON('members.json') || [];
+    const apps = (await readJSON('applications.json')) || [];
+    const members = (await readJSON('members.json')) || [];
     const memberIds = new Set(members.map(m => m.id));
     
     // CRITICAL: Filter out anyone who is already a member
@@ -15,7 +15,7 @@ export async function GET() {
     
     // If there were stale entries, clean them up
     if (pendingApps.length !== apps.length) {
-      writeJSON('applications.json', pendingApps);
+      await writeJSON('applications.json', pendingApps);
     }
 
     return NextResponse.json({
@@ -37,10 +37,10 @@ export async function POST(request) {
     const body = await request.json();
     const { action, appId, appData } = body;
 
-    // Always read fresh data
-    const apps = readJSON('applications.json') || [];
-    const members = readJSON('members.json') || [];
-    const roles = readJSON('roles.json') || [];
+    // Always read fresh data from Redis
+    const apps = (await readJSON('applications.json')) || [];
+    const members = (await readJSON('members.json')) || [];
+    const roles = (await readJSON('roles.json')) || [];
 
     if (action === 'approve') {
       const targetApp = appData || apps.find(a => a.id === appId);
@@ -75,14 +75,13 @@ export async function POST(request) {
           createdAt: new Date().toISOString()
         };
         members.push(newMember);
-        writeJSON('members.json', members);
+        await writeJSON('members.json', members);
       }
 
       // Always remove from applications (even if already member)
       const updatedApps = apps.filter(a => a.id !== targetApp.id);
-      writeJSON('applications.json', updatedApps);
+      await writeJSON('applications.json', updatedApps);
 
-      // Return updated members too
       return NextResponse.json({
         success: true,
         message: alreadyMember ? 'Already a member, cleaned up application' : 'Application approved successfully',
@@ -92,8 +91,9 @@ export async function POST(request) {
     }
 
     if (action === 'reject') {
+      // Only remove the specific appId, not others
       const updatedApps = apps.filter(a => a.id !== appId);
-      writeJSON('applications.json', updatedApps);
+      await writeJSON('applications.json', updatedApps);
 
       return NextResponse.json({
         success: true,
