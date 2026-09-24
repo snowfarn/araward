@@ -1,0 +1,3491 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AMMAHIT</title>
+
+    <link rel="icon" type="image/png" href="favicon.png?v=2">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@400;500;600;700&family=Kanit:wght@200;300;400;500;600;700&family=Inter:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-glow: rgba(255, 42, 68, 0.25);
+            --accent-red: #ff2a44;
+            --accent-red-hover: #ff4757;
+            --accent-red-glow: rgba(255, 42, 68, 0.45);
+            --accent-white: #ffffff;
+            --glass-bg: rgba(14, 14, 18, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-border-red: rgba(255, 42, 68, 0.35);
+            --bg-dark: #050508;
+            --card-bg: rgba(13, 13, 17, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: #000;
+            color: #ffffff;
+            font-family: 'Kanit', 'Rajdhani', 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* --- Background & Atmosphere --- */
+        .bg-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-color: #050508;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(5, 2, 4, 0.7)), url('banner.png');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 100% 100%;
+            background-attachment: fixed;
+            image-rendering: -webkit-optimize-contrast;
+        }
+
+        .vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 30%, rgba(18, 2, 6, 0.45) 75%, rgba(0, 0, 0, 0.92) 100%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- â„ï¸ Falling Snow Canvas --- */
+        #snow-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* --- SPA Views --- */
+        .spa-view {
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hidden-view {
+            display: none !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .spa-view.hidden-view {
+            display: none !important;
+            opacity: 0 !important;
+            transform: translateY(10px);
+        }
+
+        /* ================================================= */
+        /* --- ðŸ  VIEW 1: HOME LANDING SCREEN --- */
+        /* ================================================= */
+        #view-home {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .top-nav-home {
+            position: fixed;
+            top: 25px;
+            width: 90%;
+            max-width: 500px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border-red);
+            border-radius: 100px;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 42, 68, 0.12);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .nav-logo img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 8px rgba(255, 42, 68, 0.7));
+        }
+
+        .nav-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 2px;
+        }
+
+        .home-container {
+            text-align: center;
+            width: 100%;
+            padding: 0 30px;
+            margin-top: -20px;
+        }
+
+        .home-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2.4rem, 8vw, 4.8rem);
+            font-weight: 900;
+            letter-spacing: 15px;
+            margin-bottom: 10px;
+            background: linear-gradient(180deg, #ffffff 15%, #e2e8f0 55%, #ff2a44 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 25px rgba(255, 42, 68, 0.45));
+        }
+
+        .home-subtext {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.68rem;
+            letter-spacing: 5px;
+            color: rgba(255, 255, 255, 0.65);
+            margin-bottom: 45px;
+            text-transform: uppercase;
+            text-shadow: 0 0 12px rgba(255, 42, 68, 0.35);
+        }
+
+        .btn-enter-member {
+            position: relative;
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 280px;
+            height: 75px;
+            text-decoration: none;
+            background: linear-gradient(135deg, rgba(20, 20, 25, 0.85), rgba(35, 10, 16, 0.75));
+            border: 1px solid var(--glass-border-red);
+            border-radius: 14px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            backdrop-filter: blur(14px);
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 42, 68, 0.18);
+        }
+
+        .btn-enter-member:hover {
+            background: linear-gradient(135deg, rgba(255, 42, 68, 0.25), rgba(20, 20, 25, 0.95));
+            border-color: #ff2a44;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(255, 42, 68, 0.5);
+        }
+
+        .btn-text-main {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 3px;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 42, 68, 0.5);
+        }
+
+        .btn-text-sub {
+            font-size: 0.55rem;
+            letter-spacing: 2px;
+            color: rgba(255, 200, 210, 0.55);
+            margin-top: 5px;
+            font-family: 'Kanit', sans-serif;
+        }
+
+        .home-footer {
+            position: absolute;
+            bottom: 30px;
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.35);
+            letter-spacing: 3px;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* ================================================= */
+        /* --- 👥 VIEW 2: MEMBERS ROSTER SCREEN --- */
+        /* ================================================= */
+        #view-members {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        nav.member-nav {
+            display: flex;
+            justify-content: space-between;
+            padding: 18px 6%;
+            background: transparent;
+            align-items: center;
+            position: relative;
+            z-index: 100;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-bottom: none;
+            box-shadow: none;
+        }
+
+        #brand-name {
+            font-weight: 900;
+            letter-spacing: 3px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.15rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        #brand-name img {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(255, 42, 68, 0.7));
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-action {
+            background: #ffffff;
+            color: #000;
+            border: none;
+            padding: 9px 22px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            width: auto;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-decoration: none;
+        }
+
+        .btn-secondary {
+            background: rgba(25, 25, 30, 0.8);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 42, 68, 0.18);
+            border-color: #ff2a44;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 0 18px rgba(255, 42, 68, 0.35);
+        }
+
+        /* --- Main Layout --- */
+        .member-container {
+            flex: 1 0 auto;
+            max-width: 1240px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 35px 20px 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .page-hero-header {
+            text-align: center;
+            margin: 25px 0 45px;
+        }
+
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2.4rem, 7vw, 4.2rem);
+            font-weight: 900;
+            letter-spacing: 14px;
+            margin-bottom: 10px;
+            background: linear-gradient(180deg, #ffffff 15%, #e2e8f0 55%, #ff2a44 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 28px rgba(255, 42, 68, 0.4));
+        }
+
+        .hero-subtext {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 6px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 42, 68, 0.3);
+        }
+
+        /* --- Section Header with Glow Lines --- */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin: 50px 0 25px;
+        }
+
+        .header-line {
+            flex: 1;
+            height: 1px;
+        }
+
+        .section-title-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+        }
+
+        .header-icon {
+            font-size: 0.95rem;
+        }
+
+        .section-count {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.45);
+            font-weight: 400;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* --- Cards Grid (3 Columns) --- */
+        .roster-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        /* --- Member Card Base Styling --- */
+        .member-card {
+            background: var(--card-bg);
+            border-radius: 18px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            z-index: 2;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            contain: layout style;
+            cursor: pointer;
+        }
+
+        .card-main {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .avatar-wrap {
+            position: relative;
+            width: 54px;
+            height: 54px;
+            flex-shrink: 0;
+            margin-right: 15px;
+        }
+
+        .card-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 14px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: #111;
+            transition: transform 0.3s ease;
+        }
+
+        .member-card:hover .card-avatar {
+            transform: scale(1.05);
+        }
+
+        .status-dot {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 9px;
+            height: 9px;
+            border: 2px solid #141418;
+            border-radius: 50%;
+        }
+
+        .card-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-name {
+            font-family: 'Kanit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+        }
+
+        .card-role-badge {
+            display: inline-block;
+            align-self: flex-start;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.55rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 3px 10px;
+            border-radius: 6px;
+        }
+
+        /* THEBOSSHIGHHEAD (Gold) */
+        .card-role-founder {
+            border: 1.5px solid rgba(243, 212, 139, 0.55);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 18px rgba(243, 212, 139, 0.2);
+        }
+
+        .card-role-founder:hover {
+            border-color: #f3d48b;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 28px rgba(243, 212, 139, 0.45);
+            transform: translateY(-3px);
+        }
+
+        .card-role-founder .card-role-badge {
+            color: #f3d48b;
+            border: 1px solid rgba(243, 212, 139, 0.5);
+            background: rgba(243, 212, 139, 0.12);
+            box-shadow: 0 0 10px rgba(243, 212, 139, 0.25);
+        }
+
+        .card-role-founder .role-crown {
+            color: #f3d48b;
+            filter: drop-shadow(0 0 10px rgba(243, 212, 139, 0.85));
+        }
+
+        .card-role-founder .status-dot {
+            background: #f3d48b;
+            box-shadow: 0 0 10px rgba(243, 212, 139, 0.95);
+        }
+
+        /* VERYHIGH.WAY (Crimson Red) */
+        .card-role-leader {
+            border: 1.5px solid rgba(255, 42, 68, 0.6);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 18px rgba(255, 42, 68, 0.2);
+        }
+
+        .card-role-leader:hover {
+            border-color: #ff2a44;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 28px rgba(255, 42, 68, 0.45);
+            transform: translateY(-3px);
+        }
+
+        .card-role-leader .card-role-badge {
+            color: #ff2a44;
+            border: 1px solid rgba(255, 42, 68, 0.5);
+            background: rgba(255, 42, 68, 0.12);
+            box-shadow: 0 0 10px rgba(255, 42, 68, 0.25);
+        }
+
+        .card-role-leader .role-crown {
+            color: #ff2a44;
+            filter: drop-shadow(0 0 10px rgba(255, 42, 68, 0.85));
+        }
+
+        .card-role-leader .status-dot {
+            background: #ff2a44;
+            box-shadow: 0 0 10px rgba(255, 42, 68, 0.95);
+        }
+
+        /* GANGLIST.WAY (Crisp White) */
+        .card-role-member {
+            border: 1.5px solid rgba(255, 255, 255, 0.35);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 16px rgba(255, 255, 255, 0.1);
+        }
+
+        .card-role-member:hover {
+            border-color: #ffffff;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), 0 0 25px rgba(255, 255, 255, 0.35);
+            transform: translateY(-3px);
+        }
+
+        .card-role-member .card-role-badge {
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .card-role-member .role-crown {
+            color: #ffffff;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+        }
+
+        .card-role-member .status-dot {
+            background: #ffffff;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+        }
+
+        .card-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 54px;
+            margin-left: 15px;
+            flex-shrink: 0;
+        }
+
+        .role-crown {
+            font-size: 0.85rem;
+        }
+
+        .social-btns {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .card-social-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.65);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .card-social-btn:hover {
+            border-color: #ff2a44;
+            color: #ffffff;
+            background: rgba(255, 42, 68, 0.18);
+            box-shadow: 0 0 14px rgba(255, 42, 68, 0.45);
+            transform: scale(1.1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* --- Footer --- */
+        footer.site-footer {
+            margin-top: auto;
+            flex-shrink: 0;
+            text-align: center;
+            padding: 15px 20px 30px;
+            font-size: 0.6rem;
+            color: rgba(255, 255, 255, 0.35);
+            letter-spacing: 3px;
+            font-family: 'Orbitron', sans-serif;
+            border-top: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ================================================= */
+        /* --- ðŸ’¿ FLOATING VINYL MUSIC PLAYER (BOTTOM-RIGHT) --- */
+        /* ================================================= */
+        .vinyl-player-wrapper {
+            position: fixed;
+            bottom: 35px;
+            right: 35px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.5s ease;
+        }
+
+        .vinyl-info-box {
+            background: rgba(12, 12, 16, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border-red);
+            border-radius: 14px;
+            padding: 10px 14px;
+            min-width: 220px;
+            max-width: 270px;
+            opacity: 0;
+            transform: translateX(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.75), 0 0 15px rgba(255, 42, 68, 0.12);
+        }
+
+        .vinyl-player-wrapper:hover .vinyl-info-box,
+        .vinyl-info-box:focus-within,
+        .vinyl-info-box.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+
+        .vinyl-song-title {
+            font-size: 0.7rem;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: 'Kanit', sans-serif;
+            font-weight: 500;
+        }
+
+        .vinyl-status {
+            font-size: 0.52rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        /* --- 🔊 Volume Slider Styling --- */
+        .volume-control-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            pointer-events: auto;
+        }
+
+        .vol-btn-icon {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 18px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vol-btn-icon:hover {
+            color: #ff2a44;
+            transform: scale(1.15);
+        }
+
+        .vinyl-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .vinyl-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff2a44;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 42, 68, 0.9);
+            transition: transform 0.1s;
+        }
+
+        .vinyl-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.3);
+        }
+
+        .vinyl-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff2a44;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(255, 42, 68, 0.9);
+        }
+
+        .vol-percent {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.55rem;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1px;
+            min-width: 28px;
+            text-align: right;
+        }
+
+        /* Vinyl Disc Record */
+        .vinyl-disc {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle, #080808 30%, #181818 32%, #080808 35%, #1c1c1c 38%, #080808 42%, #181818 46%, #080808 50%, #1c1c1c 55%, #080808 60%, #151515 65%, #080808 70%),
+                #111;
+            border: 2px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 42, 68, 0.08);
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+            user-select: none;
+        }
+
+        .vinyl-disc:hover {
+            transform: scale(1.08);
+            border-color: #ff2a44;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(255, 42, 68, 0.45);
+        }
+
+        /* Spinning Animation */
+        .vinyl-disc-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: rotateVinyl 6s linear infinite;
+            animation-play-state: paused;
+            position: relative;
+        }
+
+        .playing .vinyl-disc-inner {
+            animation-play-state: running;
+        }
+
+        .playing .vinyl-disc {
+            border-color: rgba(255, 42, 68, 0.6);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 25px rgba(255, 42, 68, 0.4);
+        }
+
+        @keyframes rotateVinyl {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Center Album Art Label */
+        .vinyl-label {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+            background: #000;
+        }
+
+        .vinyl-label img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Center Spindle Hole */
+        .vinyl-center-hole {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border: 1.5px solid #ff2a44;
+            border-radius: 50%;
+            z-index: 5;
+        }
+
+        /* Play / Pause overlay icon on hover */
+        .vinyl-action-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 0.95rem;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.9));
+            pointer-events: none;
+        }
+
+        .vinyl-disc:hover .vinyl-action-icon {
+            opacity: 1;
+        }
+
+        @media (max-width: 1080px) {
+            .roster-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .member-container {
+                max-width: 900px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .bg-wrapper {
+                background-size: contain;
+            }
+
+            .roster-grid {
+                grid-template-columns: 1fr;
+            }
+
+            nav.member-nav {
+                padding: 15px 4%;
+            }
+
+            #brand-name {
+                font-size: 0.95rem;
+            }
+
+            .home-title {
+                letter-spacing: 8px;
+            }
+
+            .top-nav-home {
+                width: 85%;
+            }
+
+            .vinyl-player-wrapper {
+                bottom: 20px;
+                right: 20px;
+                gap: 10px;
+            }
+
+            .vinyl-disc {
+                width: 65px;
+                height: 65px;
+            }
+
+            .vinyl-label {
+                width: 30px;
+                height: 30px;
+            }
+
+            .vinyl-info-box {
+                min-width: 175px;
+                max-width: 220px;
+                padding: 8px 10px;
+            }
+
+            .vinyl-slider {
+                width: 65px;
+            }
+        }
+
+        /* ================================================= */
+        /* --- 🛡️ ADMIN VIEW STYLES --- */
+        /* ================================================= */
+        #view-admin {
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .roster-toast {
+            display: none !important;
+            position: fixed;
+            left: 50%;
+            bottom: 45px;
+            transform: translateX(-50%);
+            z-index: 10000;
+            padding: 10px 22px;
+            border-radius: 999px;
+            background: rgba(16, 16, 22, 0.96);
+            border: 1px solid rgba(255, 42, 68, 0.45);
+            color: #ffffff;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+            pointer-events: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), 0 0 18px rgba(255, 42, 68, 0.25);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .roster-toast.show-toast {
+            display: block !important;
+            opacity: 1 !important;
+            animation: toastFade 0.25s ease forwards;
+        }
+
+        @keyframes toastFade {
+            from {
+                opacity: 0;
+                transform: translate(-50%, 8px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
+        }
+
+        /* ================================================= */
+        /* --- ⚠️ CUSTOM CENTERED CONFIRMATION MODAL --- */
+        /* ================================================= */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(4, 4, 8, 0.78);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+            animation: modalFadeIn 0.22s ease-out;
+        }
+
+        .custom-modal-box {
+            background: rgba(15, 15, 20, 0.96);
+            border: 1px solid rgba(255, 42, 68, 0.45);
+            border-radius: 20px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 35px rgba(255, 42, 68, 0.25);
+            max-width: 440px;
+            width: 100%;
+            padding: 32px 28px 26px;
+            text-align: center;
+            position: relative;
+            animation: modalPopIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .custom-modal-icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            background: rgba(255, 42, 68, 0.15);
+            border: 1px solid rgba(255, 42, 68, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+            color: #ff2a44;
+            font-size: 1.75rem;
+            box-shadow: 0 0 25px rgba(255, 42, 68, 0.4);
+            animation: pulseIcon 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseIcon {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(255, 42, 68, 0.4); }
+            50% { transform: scale(1.06); box-shadow: 0 0 35px rgba(255, 42, 68, 0.7); }
+        }
+
+        .custom-modal-title {
+            font-family: 'Orbitron', 'Chakra Petch', sans-serif;
+            font-size: 1.22rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+
+        .custom-modal-msg {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.78);
+            line-height: 1.6;
+            margin-bottom: 26px;
+        }
+
+        .custom-modal-actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-family: 'Chakra Petch', 'Orbitron', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn-cancel {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .modal-btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.16);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .modal-btn-danger {
+            background: #ff2a44;
+            border: 1px solid #ff2a44;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 42, 68, 0.5);
+        }
+
+        .modal-btn-danger:hover {
+            background: #e01b34;
+            border-color: #e01b34;
+            box-shadow: 0 0 30px rgba(255, 42, 68, 0.8);
+            transform: translateY(-2px);
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalPopIn {
+            from { opacity: 0; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* ================================================= */
+        /* --- 👤 CYBERPUNK MEMBER PROFILE MODAL --- */
+        /* ================================================= */
+        .profile-modal-box {
+            background: rgba(14, 14, 19, 0.97);
+            border: 1px solid rgba(255, 42, 68, 0.45);
+            border-radius: 24px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 42, 68, 0.25);
+            max-width: 440px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            animation: modalPopIn 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+        }
+
+        .profile-modal-banner {
+            height: 105px;
+            background: linear-gradient(135deg, #1f080e 0%, #3a0d18 50%, #0d0d12 100%);
+            position: relative;
+            border-bottom: 1px solid rgba(255, 42, 68, 0.25);
+            overflow: hidden;
+        }
+
+        .profile-modal-banner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 80% 20%, rgba(255, 42, 68, 0.35), transparent 70%);
+        }
+
+        .profile-modal-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s ease;
+        }
+
+        .profile-modal-close:hover {
+            background: #ff2a44;
+            border-color: #ff2a44;
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 0 15px rgba(255, 42, 68, 0.8);
+        }
+
+        .profile-modal-header {
+            display: flex;
+            justify-content: center;
+            position: relative;
+            margin-top: -55px;
+            z-index: 5;
+        }
+
+        .profile-avatar-wrap {
+            position: relative;
+            width: 110px;
+            height: 110px;
+        }
+
+        .profile-avatar-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 22px;
+            object-fit: cover;
+            background: #111;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            cursor: pointer;
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .profile-avatar-img:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        .profile-status-dot {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 3px solid #0e0e13;
+            background: #2ed573;
+            box-shadow: 0 0 10px #2ed573;
+        }
+
+        .profile-modal-body {
+            padding: 16px 26px 28px;
+            text-align: center;
+        }
+
+        .profile-name {
+            font-family: 'Kanit', sans-serif;
+            font-size: 1.45rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            word-break: break-word;
+        }
+
+        .profile-role-badge {
+            display: inline-block;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            padding: 5px 16px;
+            border-radius: 8px;
+            margin-bottom: 14px;
+        }
+
+        .profile-gang-tag {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .profile-stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            text-align: left;
+        }
+
+        .profile-stat-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.52rem;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .profile-stat-val {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+
+        .profile-social-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .profile-social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #ffffff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            transition: all 0.25s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .profile-social-btn-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .profile-social-btn.btn-fb {
+            border-color: rgba(24, 119, 242, 0.4);
+            background: rgba(24, 119, 242, 0.12);
+        }
+
+        .profile-social-btn.btn-fb:hover {
+            background: #1877f2;
+            border-color: #1877f2;
+            box-shadow: 0 0 20px rgba(24, 119, 242, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .profile-social-btn.btn-ig {
+            border-color: rgba(225, 48, 108, 0.4);
+            background: rgba(225, 48, 108, 0.12);
+        }
+
+        .profile-social-btn.btn-ig:hover {
+            background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            border-color: transparent;
+            box-shadow: 0 0 20px rgba(225, 48, 108, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .profile-no-socials {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.45);
+            font-family: 'Kanit', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Role specific modal themes */
+        .profile-modal-box.role-founder {
+            border-color: rgba(243, 212, 139, 0.6);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(243, 212, 139, 0.25);
+        }
+        .profile-modal-box.role-founder .profile-avatar-img {
+            border-color: #f3d48b;
+            box-shadow: 0 0 25px rgba(243, 212, 139, 0.5);
+        }
+        .profile-modal-box.role-founder .profile-role-badge {
+            color: #f3d48b;
+            background: rgba(243, 212, 139, 0.15);
+            border: 1px solid rgba(243, 212, 139, 0.55);
+            box-shadow: 0 0 15px rgba(243, 212, 139, 0.25);
+        }
+
+        .profile-modal-box.role-leader {
+            border-color: rgba(255, 42, 68, 0.6);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 42, 68, 0.25);
+        }
+        .profile-modal-box.role-leader .profile-avatar-img {
+            border-color: #ff2a44;
+            box-shadow: 0 0 25px rgba(255, 42, 68, 0.5);
+        }
+        .profile-modal-box.role-leader .profile-role-badge {
+            color: #ff2a44;
+            background: rgba(255, 42, 68, 0.15);
+            border: 1px solid rgba(255, 42, 68, 0.55);
+            box-shadow: 0 0 15px rgba(255, 42, 68, 0.25);
+        }
+
+        .profile-modal-box.role-member {
+            border-color: rgba(255, 255, 255, 0.45);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 255, 255, 0.15);
+        }
+        .profile-modal-box.role-member .profile-avatar-img {
+            border-color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+        .profile-modal-box.role-member .profile-role-badge {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+        }
+
+        .admin-dot-grid {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            background-image: radial-gradient(rgba(255, 42, 68, 0.15) 1px, transparent 1px);
+            background-size: 22px 22px;
+            opacity: 0.35;
+        }
+
+        #admin-login {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .admin-login-card {
+            width: 100%;
+            max-width: 380px;
+            background: rgba(12, 12, 16, 0.82);
+            border: 1px solid rgba(255, 42, 68, 0.25);
+            border-radius: 22px;
+            padding: 42px 32px 28px;
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 25px rgba(255, 42, 68, 0.12);
+            text-align: center;
+        }
+
+        .admin-logo-wrap {
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-card-logo {
+            width: 100%;
+            max-width: 90px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(255, 42, 68, 0.5));
+            transition: all 0.3s ease;
+        }
+
+        .admin-login-card:hover .admin-card-logo {
+            transform: scale(1.06);
+            filter: drop-shadow(0 0 16px rgba(255, 42, 68, 0.8));
+        }
+
+        .admin-login-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: 8px;
+            margin-bottom: 8px;
+            background: linear-gradient(180deg, #ffffff 20%, #ff2a44 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(255, 42, 68, 0.5));
+        }
+
+        .admin-login-sub {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.62rem;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 28px;
+        }
+
+        .admin-field {
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        .admin-field label {
+            display: block;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.54rem;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 4px;
+        }
+
+        .admin-field input,
+        .admin-field select {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 9px;
+            color: #fff;
+            padding: 8px 12px;
+            font-family: 'Kanit', sans-serif;
+            font-size: 0.84rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .admin-field input:focus,
+        .admin-field select:focus {
+            border-color: #ff2a44;
+            box-shadow: 0 0 0 3px rgba(255, 42, 68, 0.2);
+        }
+
+        .admin-field input::placeholder {
+            color: rgba(255, 255, 255, 0.28);
+        }
+
+        /* --- Admin Role Picker --- */
+        .admin-role-picker {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .role-pill-btn {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 6px;
+            border-radius: 11px;
+            background: rgba(0, 0, 0, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.6);
+            font-family: 'Orbitron', 'Kanit', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(10px);
+        }
+
+        .role-pill-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .role-pill-founder.active {
+            background: linear-gradient(135deg, rgba(243, 212, 139, 0.3), rgba(243, 212, 139, 0.08));
+            border-color: #f3d48b;
+            color: #f3d48b;
+            box-shadow: 0 0 16px rgba(243, 212, 139, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .role-pill-leader.active {
+            background: linear-gradient(135deg, rgba(255, 42, 68, 0.3), rgba(255, 42, 68, 0.08));
+            border-color: #ff2a44;
+            color: #ff2a44;
+            box-shadow: 0 0 16px rgba(255, 42, 68, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .role-pill-member.active {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.06));
+            border-color: #ffffff;
+            color: #ffffff;
+            box-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .admin-field select {
+            display: none;
+        }
+
+        .btn-admin-signin {
+            width: 100%;
+            margin-top: 6px;
+            background: linear-gradient(135deg, rgba(255, 42, 68, 0.2), rgba(20, 20, 24, 0.9));
+            color: #fff;
+            border: 1px solid #ff2a44;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-admin-signin:hover {
+            background: #ff2a44;
+            border-color: #ff2a44;
+            box-shadow: 0 0 20px rgba(255, 42, 68, 0.6);
+        }
+
+        .admin-login-error {
+            min-height: 18px;
+            margin-top: 10px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #ff4757;
+            letter-spacing: 0.3px;
+            text-align: center;
+        }
+
+        .admin-login-foot {
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.52rem;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .admin-home-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 3;
+        }
+
+        #admin-manage {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+        }
+
+        .admin-manage-wrap {
+            max-width: 1020px;
+            margin: 0 auto;
+            padding: 15px 20px 45px;
+        }
+
+        .admin-manage-wrap .page-hero-header {
+            margin: 10px 0 18px;
+        }
+
+        .admin-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(255, 42, 68, 0.12);
+            border: 1px solid rgba(255, 42, 68, 0.4);
+            border-radius: 50px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.68rem;
+            letter-spacing: 1.5px;
+            color: #ff2a44;
+            margin-bottom: 12px;
+        }
+
+        .admin-manage-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 880px) {
+            .admin-manage-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .admin-glass {
+            background: rgba(14, 14, 18, 0.88);
+            border: 1px solid rgba(255, 42, 68, 0.2);
+            border-radius: 16px;
+            padding: 16px 20px;
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 42, 68, 0.08);
+        }
+
+        .admin-glass h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.86rem;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .admin-img-row {
+            display: grid;
+            grid-template-columns: 42px 1fr;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .admin-img-preview {
+            width: 42px;
+            height: 42px;
+            border-radius: 9px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: #111;
+        }
+
+        .admin-file-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.55);
+            cursor: pointer;
+        }
+
+        .admin-file-btn input {
+            display: none;
+        }
+
+        .admin-live-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 520px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 6px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 42, 68, 0.3) transparent;
+        }
+
+        .admin-live-item {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 14px;
+            min-height: 56px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), opacity 0.18s cubic-bezier(0.2, 0, 0, 1), border-color 0.18s ease;
+        }
+
+        .admin-live-item.is-removing {
+            opacity: 0 !important;
+            transform: translateX(-40px) scale(0.9) !important;
+            min-height: 0 !important;
+            max-height: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            pointer-events: none !important;
+            overflow: hidden !important;
+        }
+
+        .admin-live-item:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 42, 68, 0.35);
+            transform: translateX(2px);
+        }
+
+        .admin-live-item.is-editing {
+            background: rgba(255, 42, 68, 0.15);
+            border-color: #ff2a44;
+            box-shadow: 0 0 16px rgba(255, 42, 68, 0.35);
+        }
+
+        .admin-live-item-clickable {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+            cursor: pointer;
+        }
+
+        .admin-live-item-clickable img {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: #09090c;
+        }
+
+        .admin-live-meta {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2px;
+        }
+
+        .admin-live-meta strong {
+            display: block;
+            font-family: 'Kanit', sans-serif;
+            font-size: 0.92rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #fff;
+            line-height: 1.3;
+        }
+
+        .admin-live-meta span {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.55rem;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.2;
+        }
+
+        .admin-live-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-edit-item {
+            background: rgba(255, 42, 68, 0.15);
+            color: #ff2a44;
+            border: 1px solid rgba(255, 42, 68, 0.4);
+            border-radius: 8px;
+            padding: 6px 9px;
+            cursor: pointer;
+            font-size: 0.68rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-edit-item:hover {
+            background: #ff2a44;
+            color: #fff;
+            border-color: #ff2a44;
+            transform: scale(1.05);
+        }
+
+        .btn-remove {
+            background: rgba(255, 71, 87, 0.12);
+            color: #ff6b7a;
+            border: 1px solid rgba(255, 71, 87, 0.4);
+            border-radius: 8px;
+            padding: 6px 9px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.58rem;
+            letter-spacing: 1px;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .btn-remove:hover {
+            background: rgba(255, 71, 87, 0.25);
+            border-color: #ff4757;
+            color: #fff;
+        }
+
+        .btn-admin-cancel {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-admin-cancel:hover {
+            background: rgba(255, 42, 68, 0.25);
+            border-color: #ff2a44;
+            color: #ff2a44;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Background & effects -->
+    <div class="bg-wrapper"></div>
+    <div class="vignette"></div>
+
+    <!-- â„ï¸ Falling Snow Canvas -->
+    <canvas id="snow-canvas"></canvas>
+
+    <!-- Background Audio Element -->
+    <audio id="bg-audio" src="music.mp3" preload="auto" loop playsinline autoplay></audio>
+
+    <!-- ========================================== -->
+    <!-- ðŸ  VIEW 1: HOME LANDING SCREEN             -->
+    <!-- ========================================== -->
+    <div id="view-home" class="spa-view">
+        <div class="top-nav-home">
+            <a href="#" class="nav-logo">
+                <img src="logo.png?v=2" alt="icon" onerror="this.src='favicon.png?v=2'">
+                AMMAHIT
+            </a>
+            <div class="nav-text">V.2026.1</div>
+        </div>
+
+        <div class="home-container">
+            <h1 class="home-title">AMMAHIT</h1>
+            <div class="home-subtext">Discord-/Ammahit. Gang 1 century</div>
+
+            <div class="button-group">
+                <button onclick="navigateTo('members')" class="btn-enter-member">
+                    <span class="btn-text-main">MEMBER ENTER</span>
+                    <span class="btn-text-sub">CLICK CHECK MEMBER</span>
+                </button>
+            </div>
+        </div>
+
+        <footer class="home-footer">
+            &copy; Website AMMAHIT by ineedyou
+        </footer>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 👥 VIEW 2: MEMBERS ROSTER SCREEN           -->
+    <!-- ========================================== -->
+    <div id="view-members" class="spa-view hidden-view">
+        <!-- Top Navigation (Brand + Only HOME button) -->
+        <nav class="member-nav">
+            <div id="brand-name" onclick="navigateTo('home')">
+                <img src="logo.png?v=2" alt="logo" onerror="this.src='favicon.png?v=2'">
+                AMMAHIT
+            </div>
+            <div class="nav-actions">
+                <button onclick="navigateTo('home')" class="btn-action btn-secondary">
+                    <i class="fas fa-home"></i> HOME
+                </button>
+                <button onclick="navigateTo('admin')" class="btn-action btn-secondary">
+                    <i class="fas fa-user-shield"></i> ADMIN
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Member Roster Container -->
+        <div class="member-container">
+            <!-- Hero Header Title -->
+            <div class="page-hero-header">
+                <h1 class="hero-title">AMMAHIT</h1>
+                <div class="hero-subtext">THE OFFICIAL MEMBERS ROSTER</div>
+            </div>
+
+            <!-- Roster Display Sections -->
+            <div id="rosterDisplay">
+                <!-- THEBOSSHIGHHEAD (Gold) -->
+                <div id="section-founder">
+                    <div class="section-header">
+                        <span class="header-line"
+                            style="background: linear-gradient(90deg, transparent, rgba(243, 212, 139, 0.45), transparent);"></span>
+                        <div class="section-title-badge"
+                            style="color: #f3d48b; text-shadow: 0 0 15px rgba(243, 212, 139, 0.6);">
+                            <i class="fa-solid fa-crown header-icon" style="color: #f3d48b;"></i>
+                            <span id="titleFounder">THEBOSSHIGHHEAD</span>
+                            <span class="section-count" id="countFounder">[0]</span>
+                        </div>
+                        <span class="header-line"
+                            style="background: linear-gradient(90deg, transparent, rgba(243, 212, 139, 0.45), transparent);"></span>
+                    </div>
+                    <div class="roster-grid" id="founderList"></div>
+                </div>
+
+                <!-- VERYHIGH.WAY (Red) -->
+                <div id="section-leader">
+                    <div class="section-header">
+                        <span class="header-line"
+                            style="background: linear-gradient(90deg, transparent, rgba(255, 42, 68, 0.5), transparent);"></span>
+                        <div class="section-title-badge"
+                            style="color: #ff2a44; text-shadow: 0 0 15px rgba(255, 42, 68, 0.6);">
+                            <i class="fa-solid fa-crown header-icon" style="color: #ff2a44;"></i>
+                            <span id="titleLeader">VERYHIGH.WAY</span>
+                            <span class="section-count" id="countLeader">[0]</span>
+                        </div>
+                        <span class="header-line"
+                            style="background: linear-gradient(90deg, transparent, rgba(255, 42, 68, 0.5), transparent);"></span>
+                    </div>
+                    <div class="roster-grid" id="leaderList"></div>
+                </div>
+
+                <!-- GANGLIST.WAY (White) -->
+                <div id="section-member">
+                    <div class="section-header">
+                        <span class="header-line"
+                            style="background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);"></span>
+                        <div class="section-title-badge"
+                            style="color: #ffffff; text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);">
+                            <i class="fa-solid fa-users header-icon" style="color: #ffffff;"></i>
+                            <span id="titleMember">GANGLIST.WAY</span>
+                            <span class="section-count" id="countMember">[0]</span>
+                        </div>
+                        <span class="header-line"
+                            style="background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);"></span>
+                    </div>
+                    <div class="roster-grid" id="memberList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            &copy; 2026 AMMAHIT &bull; WEBSITE BY INEEDYOU
+        </footer>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 🛡️ VIEW 3: ADMIN SCREEN                     -->
+    <!-- ========================================== -->
+    <div id="view-admin" class="spa-view hidden-view">
+        <div class="admin-dot-grid"></div>
+
+        <div id="admin-login">
+            <button onclick="navigateTo('home')" class="btn-action btn-secondary admin-home-link">
+                <i class="fas fa-home"></i> HOME
+            </button>
+            <form class="admin-login-card" onsubmit="return handleAdminLogin(event)">
+                <div class="admin-logo-wrap">
+                    <img src="logo.png?v=2" alt="AMMAHIT" class="admin-card-logo" onerror="this.src='favicon.png?v=2'">
+                </div>
+                <div class="admin-login-title">ADMIN</div>
+                <div class="admin-login-sub">AUTHENTICATION REQUIRED</div>
+
+                <div class="admin-field">
+                    <label for="admin-email">EMAIL</label>
+                    <input id="admin-email" type="email" placeholder="example@email.com" autocomplete="username" required autofocus>
+                </div>
+                <div class="admin-field">
+                    <label for="admin-password">PASSWORD</label>
+                    <input id="admin-password" type="password" placeholder="••••••••••••" autocomplete="current-password" required>
+                </div>
+
+                <button type="submit" class="btn-admin-signin">SIGN IN →</button>
+                <div class="admin-login-error" id="admin-login-error"></div>
+                <div class="admin-login-foot">AMMAHIT · ADMIN MODE</div>
+            </form>
+        </div>
+
+        <div id="admin-manage" class="hidden-view">
+            <nav class="member-nav">
+                <div id="brand-name" onclick="navigateTo('home')">
+                    <img src="logo.png?v=2" alt="logo" onerror="this.src='favicon.png?v=2'">
+                    AMMAHIT
+                </div>
+                <div class="nav-actions">
+                    <button onclick="navigateTo('members')" class="btn-action btn-secondary">
+                        <i class="fas fa-users"></i> ROSTER
+                    </button>
+                    <button onclick="navigateTo('home')" class="btn-action btn-secondary">
+                        <i class="fas fa-home"></i> HOME
+                    </button>
+                    <button onclick="adminLogout()" class="btn-action btn-secondary">
+                        <i class="fas fa-right-from-bracket"></i> LOGOUT
+                    </button>
+                </div>
+            </nav>
+
+            <div class="admin-manage-wrap">
+                <div class="page-hero-header">
+                    <div class="admin-status-badge">
+                        <i class="fas fa-circle" style="font-size: 0.5rem; color: #ff2a44;"></i>
+                        <span>SYSTEM ACTIVE: REALTIME SYNC</span>
+                    </div>
+                    <h1 class="hero-title" style="font-size: clamp(1.6rem, 5vw, 2.6rem); letter-spacing: 8px;">ROSTER CONTROL</h1>
+                    <div class="hero-subtext">ADD / REMOVE IN REALTIME ACROSS ALL DEVICES</div>
+                </div>
+
+                <div class="admin-manage-grid">
+                    <div>
+                        <!-- ➕ ADD / EDIT MEMBER -->
+                        <div class="admin-glass">
+                            <h2 id="admin-form-heading"><i class="fas fa-user-plus" style="margin-right: 6px; color: #fff;"></i> ADD MEMBER</h2>
+                            <form id="admin-add-form" onsubmit="return handleAddMember(event)">
+                                <div class="admin-field">
+                                    <label for="add-name">ชื่อ (NAME)</label>
+                                    <input id="add-name" type="text" placeholder="เช่น Member AMMAHIT" required>
+                                </div>
+                                <div class="admin-field">
+                                    <label>รูปภาพ (IMAGE)</label>
+                                    <div class="admin-img-row">
+                                        <img id="add-img-preview" class="admin-img-preview" src="logo.png" alt="preview" onerror="this.src='logo.png'">
+                                        <input id="add-img" type="text" placeholder="ลิงก์รูปภาพ หรืออัปโหลดด้านล่าง">
+                                    </div>
+                                    <label class="admin-file-btn">
+                                        <i class="fas fa-image"></i> อัปโหลดรูปจากเครื่อง (ย่อขนาดอัตโนมัติ)
+                                        <input id="add-img-file" type="file" accept="image/*" onchange="previewAdminImage(this)">
+                                    </label>
+                                </div>
+                                <div class="admin-field">
+                                    <label for="add-fb">ลิงก์ Facebook</label>
+                                    <input id="add-fb" type="text" placeholder="https://www.facebook.com/...">
+                                </div>
+                                <div class="admin-field">
+                                    <label for="add-ig">ลิงก์ Instagram</label>
+                                    <input id="add-ig" type="text" placeholder="https://www.instagram.com/...">
+                                </div>
+                                <div class="admin-field">
+                                    <label>ตำแหน่ง (ROLE)</label>
+                                    <select id="add-role">
+                                        <option value="founder" selected>THEBOSSHIGHHEAD</option>
+                                        <option value="leader">VERYHIGH.WAY</option>
+                                        <option value="member">GANGLIST.WAY</option>
+                                    </select>
+                                    <div class="admin-role-picker" id="adminRolePicker">
+                                        <button type="button" class="role-pill-btn role-pill-founder active" onclick="setAdminRole('founder')">
+                                            <i class="fa-solid fa-crown"></i>
+                                            <span>THEBOSSHIGHHEAD</span>
+                                        </button>
+                                        <button type="button" class="role-pill-btn role-pill-leader" onclick="setAdminRole('leader')">
+                                            <i class="fa-solid fa-crown"></i>
+                                            <span>VERYHIGH.WAY</span>
+                                        </button>
+                                        <button type="button" class="role-pill-btn role-pill-member" onclick="setAdminRole('member')">
+                                            <i class="fa-solid fa-users"></i>
+                                            <span>GANGLIST.WAY</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                    <button type="submit" id="btn-admin-submit" class="btn-admin-signin" style="flex: 1;">ADD NAME →</button>
+                                    <button type="button" id="btn-admin-cancel" class="btn-admin-cancel hidden-view" onclick="cancelEditMember()" style="flex: 0.4;">CANCEL</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="admin-glass">
+                        <h2>LIVE LIST <span class="section-count" id="admin-live-count">[0]</span></h2>
+                        <div class="admin-live-list" id="admin-live-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="roster-toast" class="roster-toast hidden-view"></div>
+
+    <!-- ⚠️ CUSTOM CENTERED CONFIRMATION MODAL -->
+    <div id="confirmModal" class="custom-modal-overlay hidden-view" role="dialog" aria-modal="true">
+        <div class="custom-modal-box">
+            <div class="custom-modal-icon">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="custom-modal-title">ยืนยันการลบรายชื่อ</h3>
+            <p class="custom-modal-msg" id="confirmModalMsg">ต้องการลบรายชื่อนี้ใช่หรือไม่?</p>
+            <div class="custom-modal-actions">
+                <button type="button" class="modal-btn modal-btn-cancel" id="confirmModalCancel">
+                    <i class="fas fa-xmark"></i> ยกเลิก
+                </button>
+                <button type="button" class="modal-btn modal-btn-danger" id="confirmModalOk">
+                    <i class="fas fa-trash-can"></i> ยืนยันลบ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👤 MEMBER PROFILE MODAL -->
+    <div id="profileModal" class="custom-modal-overlay hidden-view" role="dialog" aria-modal="true" onclick="closeMemberProfileOnBackdrop(event)">
+        <div class="profile-modal-box" id="profileModalBox">
+            <button type="button" class="profile-modal-close" onclick="closeMemberProfile()" title="ปิดหน้าต่าง">
+                <i class="fas fa-xmark"></i>
+            </button>
+            <div class="profile-modal-banner"></div>
+            <div class="profile-modal-header">
+                <div class="profile-avatar-wrap" id="profileAvatarWrap">
+                    <img src="logo.png" alt="Profile Avatar" id="profileAvatar" class="profile-avatar-img" onerror="this.src='logo.png'" title="คลิกเพื่อดูรูปขนาดเต็ม">
+                    <span class="profile-status-dot"></span>
+                </div>
+            </div>
+            <div class="profile-modal-body">
+                <div class="profile-name" id="profileName">MEMBER NAME</div>
+                <div class="profile-role-badge" id="profileRoleBadge">ROLE</div>
+                <div class="profile-gang-tag">
+                    <i class="fas fa-shield-halved" style="color: #ff2a44; margin-right: 6px;"></i> AMMAHIT • OFFICIAL ROSTER
+                </div>
+
+                <div class="profile-stats-grid">
+                    <div class="profile-stat-box">
+                        <span class="profile-stat-label">STATUS</span>
+                        <span class="profile-stat-val" style="color: #2ed573;">● ACTIVE</span>
+                    </div>
+                    <div class="profile-stat-box">
+                        <span class="profile-stat-label">ORGANIZATION</span>
+                        <span class="profile-stat-val">AMMAHIT</span>
+                    </div>
+                </div>
+
+                <div class="profile-social-section" id="profileSocialSection">
+                    <!-- Dynamic social links (Facebook, Instagram) -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ðŸ’¿ FLOATING VINYL MUSIC PLAYER (BOTTOM-RIGHT) -->
+    <!-- ========================================== -->
+    <div class="vinyl-player-wrapper" id="player-container">
+        <div class="vinyl-info-box" id="vinylInfoBox">
+            <div class="vinyl-song-title" id="music-title">she goes by. (KayArchon Remix)</div>
+            <div class="vinyl-status" id="music-status">CLICK DISC TO PLAY / PAUSE</div>
+
+            <!-- ðŸ”Š Volume Control -->
+            <div class="volume-control-row">
+                <i class="fas fa-volume-high vol-btn-icon" id="vol-icon" onclick="toggleMute(event)"
+                    title="Mute / Unmute"></i>
+                <input type="range" id="vol-slider" class="vinyl-slider" min="0" max="100" value="80"
+                    oninput="changeVolume(this.value)" title="Volume Slider">
+                <span class="vol-percent" id="vol-text">80%</span>
+            </div>
+        </div>
+
+        <div class="vinyl-disc" id="master-play" title="Click to Play / Pause">
+            <div class="vinyl-disc-inner">
+                <div class="vinyl-label">
+                    <img src="cover.jpg" alt="Cover" id="music-cover" onerror="this.src='pedstyle.png'">
+                </div>
+                <div class="vinyl-center-hole"></div>
+            </div>
+            <i class="fas fa-play vinyl-action-icon" id="play-icon"></i>
+        </div>
+    </div>
+
+    <script>
+        /* ================================================= */
+        /* --- 🛡️ TOTAL ANTI-F12 & DEVTOOLS BLOCKER (ALL BROWSERS) --- */
+        /* ================================================= */
+        (function () {
+            // 1. Block Right-Click Context Menu & Drag
+            function disableEvent(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+                return false;
+            }
+
+            ['contextmenu', 'dragstart'].forEach(evt => {
+                window.addEventListener(evt, disableEvent, { capture: true, passive: false });
+                document.addEventListener(evt, disableEvent, { capture: true, passive: false });
+            });
+
+            // 2. Universal F12 & DevTools Shortcuts Blocker (Chrome, Edge, Firefox, Safari, Brave, Opera)
+            function isDevToolsShortcut(e) {
+                const key = (e.key || '').toLowerCase();
+                const code = (e.code || '').toLowerCase();
+                const keyCode = e.keyCode || e.which || 0;
+                const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+                const isShift = e.shiftKey;
+                const isAlt = e.altKey;
+
+                // F12 key (All browsers, all layouts: key, code, keyCode 123)
+                if (key === 'f12' || code === 'f12' || keyCode === 123) {
+                    return true;
+                }
+
+                // Ctrl+Shift+I / Cmd+Opt+I (Inspect Element) - keyCode 73
+                if ((isCtrlOrCmd && isShift && (key === 'i' || keyCode === 73)) ||
+                    (e.metaKey && isAlt && (key === 'i' || keyCode === 73))) {
+                    return true;
+                }
+
+                // Ctrl+Shift+J / Cmd+Opt+J (Console) - keyCode 74
+                if ((isCtrlOrCmd && isShift && (key === 'j' || keyCode === 74)) ||
+                    (e.metaKey && isAlt && (key === 'j' || keyCode === 74))) {
+                    return true;
+                }
+
+                // Ctrl+Shift+C / Cmd+Shift+C (Inspect Element) - keyCode 67
+                if (isCtrlOrCmd && isShift && (key === 'c' || keyCode === 67)) {
+                    return true;
+                }
+
+                // Ctrl+Shift+K (Firefox Web Console) - keyCode 75
+                if (isCtrlOrCmd && isShift && (key === 'k' || keyCode === 75)) {
+                    return true;
+                }
+
+                // Ctrl+Shift+E (Firefox Network) - keyCode 69
+                if (isCtrlOrCmd && isShift && (key === 'e' || keyCode === 69)) {
+                    return true;
+                }
+
+                // Ctrl+U / Cmd+Opt+U (View Source) - keyCode 85
+                if ((isCtrlOrCmd && (key === 'u' || keyCode === 85)) ||
+                    (e.metaKey && isAlt && (key === 'u' || keyCode === 85))) {
+                    return true;
+                }
+
+                // Ctrl+S / Cmd+S (Save Page) - keyCode 83
+                if (isCtrlOrCmd && (key === 's' || keyCode === 83)) {
+                    return true;
+                }
+
+                // Shift+F7 (Firefox Style Editor) - keyCode 118
+                if (isShift && (key === 'f7' || code === 'f7' || keyCode === 118)) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            function handleKey(e) {
+                if (isDevToolsShortcut(e)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    if (typeof showRosterToast === 'function' && e.type === 'keydown') {
+                        showRosterToast('ไม่อนุญาตให้เปิด Developer Tools ⚠️');
+                    }
+                    return false;
+                }
+            }
+
+            // Intercept at earliest capture phase across all keyboard event types
+            ['keydown', 'keyup', 'keypress'].forEach(evt => {
+                window.addEventListener(evt, handleKey, { capture: true, passive: false });
+                document.addEventListener(evt, handleKey, { capture: true, passive: false });
+            });
+
+            // 3. Active Anti-Inspection Debugger Lock (Jams DevTools if opened via browser menu ...)
+            setInterval(function () {
+                (function () {
+                    return function (a) {
+                        Function("debugger")();
+                    };
+                })()();
+            }, 250);
+
+            // 4. Suppress and clear console
+            try {
+                console.log = function () {};
+                console.warn = function () {};
+                console.error = function () {};
+                console.info = function () {};
+                console.table = function () {};
+                console.dir = function () {};
+                console.clear();
+            } catch (e) {}
+        })();
+
+        /* ================================================= */
+        /* --- ❄️ AESTHETIC FALLING SNOW & CRIMSON PETALS ENGINE --- */
+        /* ================================================= */
+        (function () {
+            const canvas = document.getElementById('snow-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            let width = canvas.width = window.innerWidth;
+            let height = canvas.height = window.innerHeight;
+
+            const particleCount = 85;
+            const particles = [];
+
+            for (let i = 0; i < particleCount; i++) {
+                const isPetal = Math.random() < 0.35;
+                particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: isPetal ? (Math.random() * 2.8 + 1.2) : (Math.random() * 2.0 + 0.8),
+                    isPetal: isPetal,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.04,
+                    speedY: isPetal ? (Math.random() * 1.1 + 0.5) : (Math.random() * 0.8 + 0.4),
+                    speedX: Math.random() * 0.7 - 0.35,
+                    opacity: Math.random() * 0.65 + 0.3,
+                    swing: Math.random() * 2 * Math.PI,
+                    swingSpeed: Math.random() * 0.025 + 0.012
+                });
+            }
+
+            function drawSnow() {
+                ctx.clearRect(0, 0, width, height);
+
+                for (let i = 0; i < particleCount; i++) {
+                    const p = particles[i];
+
+                    ctx.save();
+                    if (p.isPetal) {
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(p.rotation);
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, p.radius * 1.5, p.radius * 0.75, 0, 0, Math.PI * 2);
+                        ctx.fillStyle = `rgba(255, 42, 68, ${p.opacity})`;
+                        ctx.shadowColor = 'rgba(255, 42, 68, 0.75)';
+                        ctx.shadowBlur = 6;
+                        ctx.fill();
+                        p.rotation += p.rotationSpeed;
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+                        ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+                        ctx.shadowColor = 'rgba(255, 255, 255, 0.45)';
+                        ctx.shadowBlur = p.radius > 2 ? 4 : 0;
+                        ctx.fill();
+                    }
+                    ctx.restore();
+
+                    // Movement update
+                    p.swing += p.swingSpeed;
+                    p.y += p.speedY;
+                    p.x += Math.sin(p.swing) * 0.7 + p.speedX;
+
+                    // Wrap around boundaries
+                    if (p.y > height + 10) {
+                        p.y = -10;
+                        p.x = Math.random() * width;
+                    }
+                    if (p.x > width + 10) {
+                        p.x = -10;
+                    } else if (p.x < -10) {
+                        p.x = width + 10;
+                    }
+                }
+
+                requestAnimationFrame(drawSnow);
+            }
+
+            window.addEventListener('resize', () => {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            });
+
+            drawSnow();
+        })();
+
+        /* ================================================= */
+        /* --- 👥 REALTIME CLOUD ROSTER ENGINE (AMMAHIT) --- */
+        /* ================================================= */
+        const RTDB_URL = 'https://fahpathanlady-default-rtdb.firebaseio.com/ammahit_members.json';
+        const ROSTER_STORAGE_KEY = 'ammahit_live_roster_v2';
+        const ADMIN_SESSION_KEY = 'pedstyle_admin_ok';
+        const _AUTH_VAULT = '81eaa8f0bfaee968eb09bd577eb6975317104d2591df421b323e06ee11f8b447';
+        const _AUTH_VAULT_ALT = '0d84ba6b83c0b5becf398d445d5c3adfd3373239a387eb52b791e5a9c59b7dc8';
+        const _AUTH_KEY = 'AMMAHIT_CYBER_VAULT_KEY_2026';
+
+        let liveMembers = [];
+        let pendingImageData = '';
+        let adminSessionMemory = false;
+        let rosterToastTimer = 0;
+        let editingMemberId = null;
+        let realtimeEventSource = null;
+
+        async function sha256Hex(message) {
+            try {
+                const msgBuffer = new TextEncoder().encode(message);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            } catch (e) {
+                return '';
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str || '').replace(/[&<>"']/g, function (ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+            });
+        }
+
+        const ROLE_NAMES = {
+            founder: 'THEBOSSHIGHHEAD',
+            leader: 'VERYHIGH.WAY',
+            member: 'GANGLIST.WAY'
+        };
+
+        function normalizeMember(item, index) {
+            if (!item || !item.name) return null;
+            let role = String(item.role || 'member').toLowerCase().trim();
+            if (role === 'queen' || role === 'thebosshighhead') role = 'founder';
+            if (role === 'veryhigh.way' || role === 'veryhigh') role = 'leader';
+            if (role === 'ganglist.way' || role === 'ganglist') role = 'member';
+            return {
+                id: String(item.id || ('m-' + (index || Date.now()))),
+                name: String(item.name).trim(),
+                role: role,
+                img: item.img || '',
+                fb: item.fb || '',
+                ig: item.ig || ''
+            };
+        }
+
+        function showRosterToast(message) {
+            const el = document.getElementById('roster-toast');
+            if (!el) return;
+            el.textContent = message;
+            el.classList.remove('hidden-view');
+            el.classList.add('show-toast');
+            clearTimeout(rosterToastTimer);
+            rosterToastTimer = setTimeout(function () {
+                el.classList.remove('show-toast');
+                el.classList.add('hidden-view');
+                el.textContent = '';
+            }, 2600);
+        }
+
+        function refreshRosterViews() {
+            renderRoster();
+            renderAdminList();
+        }
+
+        /* --- ⚠️ CUSTOM CENTERED CONFIRMATION DIALOG (PROMISE-BASED) --- */
+        function showCustomConfirm(message, targetName) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('confirmModal');
+                const msgEl = document.getElementById('confirmModalMsg');
+                const okBtn = document.getElementById('confirmModalOk');
+                const cancelBtn = document.getElementById('confirmModalCancel');
+
+                if (!overlay || !okBtn || !cancelBtn) {
+                    resolve(window.confirm(message));
+                    return;
+                }
+
+                if (msgEl) {
+                    if (targetName) {
+                        msgEl.innerHTML = `ต้องการลบรายชื่อ <strong style="color: #ff2a44; font-size: 1.05rem;">"${escapeHtml(targetName)}"</strong> ใช่หรือไม่?<br><span style="font-size: 0.8rem; color: rgba(255,255,255,0.45); display: inline-block; margin-top: 4px;">ระบบจะลบและซิงค์ Realtime ทุกเครื่องทันที</span>`;
+                    } else {
+                        msgEl.textContent = message;
+                    }
+                }
+
+                overlay.classList.remove('hidden-view');
+
+                function cleanup(result) {
+                    overlay.classList.add('hidden-view');
+                    okBtn.removeEventListener('click', onOk);
+                    cancelBtn.removeEventListener('click', onCancel);
+                    overlay.removeEventListener('click', onBackdrop);
+                    document.removeEventListener('keydown', onKey);
+                    resolve(result);
+                }
+
+                function onOk(e) {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    cleanup(true);
+                }
+
+                function onCancel(e) {
+                    if (e) { e.preventDefault(); e.stopPropagation(); }
+                    cleanup(false);
+                }
+
+                function onBackdrop(e) {
+                    if (e.target === overlay) {
+                        cleanup(false);
+                    }
+                }
+
+                function onKey(e) {
+                    if (e.key === 'Escape') {
+                        cleanup(false);
+                    } else if (e.key === 'Enter') {
+                        cleanup(true);
+                    }
+                }
+
+                okBtn.addEventListener('click', onOk);
+                cancelBtn.addEventListener('click', onCancel);
+                overlay.addEventListener('click', onBackdrop);
+                document.addEventListener('keydown', onKey);
+            });
+        }
+
+        /* ================================================= */
+        /* --- 👤 MEMBER PROFILE POPUP CONTROLLER --- */
+        /* ================================================= */
+        function openMemberProfile(id) {
+            const member = liveMembers.find(m => String(m.id) === String(id));
+            if (!member) return;
+
+            const modal = document.getElementById('profileModal');
+            const box = document.getElementById('profileModalBox');
+            const avatar = document.getElementById('profileAvatar');
+            const nameEl = document.getElementById('profileName');
+            const badgeEl = document.getElementById('profileRoleBadge');
+            const socialSection = document.getElementById('profileSocialSection');
+
+            if (!modal || !box) return;
+
+            const role = (member.role || 'member').toLowerCase();
+            const roleBadgeText = ROLE_NAMES[role] || role.toUpperCase();
+            const displayImg = (member.img && member.img.trim() !== '') ? member.img : 'logo.png';
+
+            box.classList.remove('role-founder', 'role-leader', 'role-member');
+            box.classList.add(`role-${role}`);
+
+            if (avatar) {
+                avatar.src = displayImg;
+                avatar.alt = member.name;
+                avatar.onclick = function () {
+                    if (displayImg && displayImg !== 'logo.png') {
+                        window.open(displayImg, '_blank');
+                    }
+                };
+            }
+
+            if (nameEl) nameEl.textContent = member.name;
+            if (badgeEl) badgeEl.textContent = roleBadgeText;
+
+            if (socialSection) {
+                let socialHtml = '';
+                const hasFb = member.fb && member.fb.trim() !== '';
+                const hasIg = member.ig && member.ig.trim() !== '';
+
+                if (hasFb) {
+                    socialHtml += `
+                        <a href="${escapeHtml(member.fb)}" target="_blank" rel="noopener noreferrer" class="profile-social-btn btn-fb">
+                            <div class="profile-social-btn-inner">
+                                <i class="fab fa-facebook-f fa-lg"></i>
+                                <span>FACEBOOK</span>
+                            </div>
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </a>
+                    `;
+                }
+
+                if (hasIg) {
+                    socialHtml += `
+                        <a href="${escapeHtml(member.ig)}" target="_blank" rel="noopener noreferrer" class="profile-social-btn btn-ig">
+                            <div class="profile-social-btn-inner">
+                                <i class="fab fa-instagram fa-lg"></i>
+                                <span>INSTAGRAM</span>
+                            </div>
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </a>
+                    `;
+                }
+
+                if (!hasFb && !hasIg) {
+                    socialHtml = `
+                        <div class="profile-no-socials">
+                            <i class="fas fa-link-slash"></i> ไม่ได้ระบุช่องทางติดต่อ
+                        </div>
+                    `;
+                }
+
+                socialSection.innerHTML = socialHtml;
+            }
+
+            modal.classList.remove('hidden-view');
+        }
+
+        function closeMemberProfile() {
+            const modal = document.getElementById('profileModal');
+            if (modal) {
+                modal.classList.add('hidden-view');
+            }
+        }
+
+        function closeMemberProfileOnBackdrop(e) {
+            if (e.target.id === 'profileModal') {
+                closeMemberProfile();
+            }
+        }
+
+        // Close profile modal on Escape
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('profileModal');
+                if (modal && !modal.classList.contains('hidden-view')) {
+                    closeMemberProfile();
+                }
+            }
+        });
+
+        // Utility to check if two member lists are structurally identical (prevents unnecessary re-renders)
+        function isRosterEqual(a, b) {
+            if (!Array.isArray(a) || !Array.isArray(b)) return false;
+            if (a.length !== b.length) return false;
+            for (let i = 0; i < a.length; i++) {
+                const itemA = a[i];
+                const itemB = b[i];
+                if (!itemA || !itemB) return false;
+                if (itemA.id !== itemB.id ||
+                    itemA.name !== itemB.name ||
+                    itemA.role !== itemB.role ||
+                    itemA.img !== itemB.img ||
+                    itemA.fb !== itemB.fb ||
+                    itemA.ig !== itemB.ig) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Cross-tab sync channel
+        let rosterChannel = null;
+        try {
+            rosterChannel = new BroadcastChannel('ammahit_channel');
+            rosterChannel.onmessage = function (ev) {
+                if (ev.data && Array.isArray(ev.data.members)) {
+                    const newMembers = ev.data.members.map(normalizeMember).filter(Boolean);
+                    if (!isRosterEqual(liveMembers, newMembers)) {
+                        liveMembers = newMembers;
+                        refreshRosterViews();
+                    }
+                }
+            };
+        } catch (e) { }
+
+        // Cross-tab storage fallback listener
+        window.addEventListener('storage', function (e) {
+            if (e.key === ROSTER_STORAGE_KEY) {
+                try {
+                    const parsed = JSON.parse(e.newValue);
+                    if (Array.isArray(parsed)) {
+                        const newMembers = parsed.map(normalizeMember).filter(Boolean);
+                        if (!isRosterEqual(liveMembers, newMembers)) {
+                            liveMembers = newMembers;
+                            refreshRosterViews();
+                        }
+                    }
+                } catch (err) { }
+            }
+        });
+
+        /* --- 🌐 REALTIME CLOUD PUSH & SYNC (ALL DEVICES) --- */
+        async function fetchCloudMembers() {
+            try {
+                const res = await fetch(`${RTDB_URL}?t=${Date.now()}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data)) {
+                        const newMembers = data.map(normalizeMember).filter(Boolean);
+                        if (!isRosterEqual(liveMembers, newMembers)) {
+                            liveMembers = newMembers;
+                            try { localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(liveMembers)); } catch (e) { }
+                            refreshRosterViews();
+                        }
+                    } else if (data === null) {
+                        // If cloud is null, seed from local storage if exists
+                        const saved = localStorage.getItem(ROSTER_STORAGE_KEY) || localStorage.getItem('pedstyle_live_roster_v2');
+                        if (saved) {
+                            try {
+                                const parsed = JSON.parse(saved);
+                                if (Array.isArray(parsed) && parsed.length > 0) {
+                                    const newMembers = parsed.map(normalizeMember).filter(Boolean);
+                                    if (!isRosterEqual(liveMembers, newMembers)) {
+                                        liveMembers = newMembers;
+                                        refreshRosterViews();
+                                        saveRoster(false);
+                                    }
+                                }
+                            } catch (e) { }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn('Realtime fetch error:', err);
+            }
+        }
+
+        function startRealtimeStream() {
+            try {
+                if (realtimeEventSource) {
+                    realtimeEventSource.close();
+                }
+                realtimeEventSource = new EventSource(RTDB_URL);
+                realtimeEventSource.addEventListener('put', function (e) {
+                    try {
+                        const parsed = JSON.parse(e.data);
+                        if (parsed && parsed.path === '/') {
+                            const data = parsed.data;
+                            let newMembers = [];
+                            if (Array.isArray(data)) {
+                                newMembers = data.map(normalizeMember).filter(Boolean);
+                            }
+                            if (!isRosterEqual(liveMembers, newMembers)) {
+                                liveMembers = newMembers;
+                                try { localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(liveMembers)); } catch (err) { }
+                                refreshRosterViews();
+                            }
+                        } else {
+                            fetchCloudMembers();
+                        }
+                    } catch (err) {
+                        fetchCloudMembers();
+                    }
+                });
+
+                realtimeEventSource.onerror = function () {
+                    if (realtimeEventSource) realtimeEventSource.close();
+                    setTimeout(startRealtimeStream, 6000);
+                };
+            } catch (e) {
+                // Fallback to polling
+            }
+        }
+
+        // Periodic cloud polling backup every 10s (smart diff prevents any DOM flickering)
+        setInterval(fetchCloudMembers, 10000);
+
+        async function saveRoster(showToastMsg = true) {
+            const now = Date.now();
+
+            // 1. Local storage backup
+            try {
+                localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(liveMembers));
+            } catch (e) { }
+
+            // 2. Broadcast to other tabs on same device
+            try {
+                if (rosterChannel) rosterChannel.postMessage({ members: liveMembers, timestamp: now });
+            } catch (e) { }
+
+            // 3. 🌐 Push to Firebase Cloud (Realtime broadcast to all devices globally)
+            try {
+                const res = await fetch(RTDB_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(liveMembers)
+                });
+                if (res.ok && showToastMsg) {
+                    showRosterToast('ซิงค์ Realtime ทุกเครื่องเรียบร้อย! 🚀✨');
+                }
+            } catch (err) {
+                console.warn('Realtime save error:', err);
+            }
+        }
+
+        function loadRoster() {
+            try {
+                const saved = localStorage.getItem(ROSTER_STORAGE_KEY) || localStorage.getItem('pedstyle_live_roster_v2');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        liveMembers = parsed.map(normalizeMember).filter(Boolean);
+                    }
+                }
+            } catch (e) { }
+            refreshRosterViews();
+            fetchCloudMembers();
+        }
+
+        /* --- Render Public Roster Cards (Smart Keyed Diffing - Zero Flickering) --- */
+        function renderRoster() {
+            const lists = { founder: 'founderList', leader: 'leaderList', member: 'memberList' };
+            const countCounters = { founder: 0, leader: 0, member: 0 };
+
+            const grouped = { founder: [], leader: [], member: [] };
+            liveMembers.forEach(item => {
+                const role = (item.role || 'member').toLowerCase();
+                if (grouped[role]) {
+                    grouped[role].push(item);
+                    countCounters[role]++;
+                }
+            });
+
+            // Update Counts
+            const countFounderEl = document.getElementById('countFounder');
+            if (countFounderEl) countFounderEl.innerText = `[${countCounters.founder}]`;
+            const countLeaderEl = document.getElementById('countLeader');
+            if (countLeaderEl) countLeaderEl.innerText = `[${countCounters.leader}]`;
+            const countMemberEl = document.getElementById('countMember');
+            if (countMemberEl) countMemberEl.innerText = `[${countCounters.member}]`;
+
+            Object.keys(lists).forEach(role => {
+                const container = document.getElementById(lists[role]);
+                if (!container) return;
+
+                const roleMembers = grouped[role];
+                const memberIds = new Set(roleMembers.map(m => m.id));
+
+                // 1. Remove cards that no longer exist in this category
+                Array.from(container.children).forEach(card => {
+                    const mid = card.getAttribute('data-id');
+                    if (!mid || !memberIds.has(mid)) {
+                        card.remove();
+                    }
+                });
+
+                // 2. Add or seamlessly update cards in exact order
+                roleMembers.forEach((item, index) => {
+                    let card = container.querySelector(`:scope > [data-id="${item.id}"]`);
+                    const displayImg = (item.img && item.img.trim() !== '') ? item.img : 'logo.png';
+                    const fbHTML = item.fb ? `<a href="${escapeHtml(item.fb)}" target="_blank" rel="noopener noreferrer" class="card-social-btn" title="Facebook" onclick="event.stopPropagation()"><i class="fab fa-facebook-f"></i></a>` : '';
+                    const igHTML = item.ig ? `<a href="${escapeHtml(item.ig)}" target="_blank" rel="noopener noreferrer" class="card-social-btn" title="Instagram" onclick="event.stopPropagation()"><i class="fab fa-instagram"></i></a>` : '';
+                    const roleIcon = (role === 'member') ? 'fa-users' : 'fa-crown';
+                    const roleBadgeText = ROLE_NAMES[role] || role.toUpperCase();
+
+                    const cardHTML = `
+                        <div style="width: 100%;">
+                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                <div class="card-main">
+                                    <div class="avatar-wrap">
+                                        <img src="${displayImg}" alt="${escapeHtml(item.name)}" class="card-avatar" referrerpolicy="no-referrer" onerror="this.src='logo.png'">
+                                        <span class="status-dot"></span>
+                                    </div>
+                                    <div class="card-info">
+                                        <div class="card-name">${escapeHtml(item.name)}</div>
+                                        <div class="card-role-badge">${roleBadgeText}</div>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <i class="fa-solid ${roleIcon} role-crown"></i>
+                                    <div class="social-btns">
+                                        ${fbHTML}
+                                        ${igHTML}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.className = `member-card card-role-${role}`;
+                        card.setAttribute('data-id', item.id);
+                        card.setAttribute('onclick', `openMemberProfile('${item.id}')`);
+                        card.setAttribute('title', 'คลิกเพื่อดูโปรไฟล์สมาชิก');
+                        card.innerHTML = cardHTML;
+                        if (index < container.children.length) {
+                            container.insertBefore(card, container.children[index]);
+                        } else {
+                            container.appendChild(card);
+                        }
+                    } else {
+                        if (card.className !== `member-card card-role-${role}`) {
+                            card.className = `member-card card-role-${role}`;
+                        }
+                        if (card.getAttribute('onclick') !== `openMemberProfile('${item.id}')`) {
+                            card.setAttribute('onclick', `openMemberProfile('${item.id}')`);
+                            card.setAttribute('title', 'คลิกเพื่อดูโปรไฟล์สมาชิก');
+                        }
+                        if (card.innerHTML.trim() !== cardHTML.trim()) {
+                            card.innerHTML = cardHTML;
+                        }
+                        if (container.children[index] !== card) {
+                            container.insertBefore(card, container.children[index] || null);
+                        }
+                    }
+                });
+            });
+        }
+
+        /* --- Render Admin Live List (Smart Keyed Diffing - Zero Flickering) --- */
+        function renderAdminList() {
+            const listEl = document.getElementById('admin-live-list');
+            const countEl = document.getElementById('admin-live-count');
+            if (!listEl) return;
+            if (countEl) countEl.innerText = `[${liveMembers.length}]`;
+
+            if (liveMembers.length === 0) {
+                if (!listEl.querySelector('.admin-empty-msg')) {
+                    listEl.innerHTML = '<div class="admin-empty-msg" style="text-align: center; padding: 25px; color: rgba(255,255,255,0.4); font-size: 0.8rem; font-family: \'Orbitron\', sans-serif;">NO MEMBERS YET</div>';
+                }
+                return;
+            } else {
+                const emptyMsg = listEl.querySelector('.admin-empty-msg');
+                if (emptyMsg) emptyMsg.remove();
+            }
+
+            const memberIds = new Set(liveMembers.map(m => m.id));
+            Array.from(listEl.children).forEach(child => {
+                const mid = child.getAttribute('data-admin-id');
+                if (mid && !memberIds.has(mid)) {
+                    child.remove();
+                }
+            });
+
+            liveMembers.forEach((m, index) => {
+                let item = listEl.querySelector(`:scope > [data-admin-id="${m.id}"]`);
+                const isEditing = editingMemberId === m.id;
+                const itemClass = 'admin-live-item' + (isEditing ? ' is-editing' : '');
+                const displayImg = (m.img && m.img.trim() !== '') ? m.img : 'logo.png';
+                const roleDisplay = ROLE_NAMES[m.role] || (m.role || 'MEMBER').toUpperCase();
+
+                const itemHTML = `
+                    <div class="admin-live-item-clickable" onclick="editMember('${m.id}')">
+                        <img src="${displayImg}" alt="${escapeHtml(m.name)}" onerror="this.src='logo.png'">
+                        <div class="admin-live-meta">
+                            <strong>${escapeHtml(m.name)}</strong>
+                            <span>${roleDisplay}</span>
+                        </div>
+                    </div>
+                    <div class="admin-live-actions">
+                        <button type="button" class="btn-edit-item" onclick="editMember('${m.id}')" title="แก้ไข">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button type="button" class="btn-remove" onclick="deleteMember('${m.id}')" title="ลบ">
+                            <i class="fas fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+
+                if (!item) {
+                    item = document.createElement('div');
+                    item.className = itemClass;
+                    item.id = `admin-item-${m.id}`;
+                    item.setAttribute('data-admin-id', m.id);
+                    item.innerHTML = itemHTML;
+                    if (index < listEl.children.length) {
+                        listEl.insertBefore(item, listEl.children[index]);
+                    } else {
+                        listEl.appendChild(item);
+                    }
+                } else {
+                    if (item.className !== itemClass) item.className = itemClass;
+                    if (item.innerHTML.trim() !== itemHTML.trim()) {
+                        item.innerHTML = itemHTML;
+                    }
+                    if (listEl.children[index] !== item) {
+                        listEl.insertBefore(item, listEl.children[index] || null);
+                    }
+                }
+            });
+        }
+
+        /* ================================================= */
+        /* --- 🔐 ADMIN AUTH & MANAGEMENT --- */
+        /* ================================================= */
+        function isAdminLoggedIn() {
+            if (adminSessionMemory) return true;
+            try {
+                return sessionStorage.getItem(ADMIN_SESSION_KEY) === '1';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function syncAdminScreen() {
+            const login = document.getElementById('admin-login');
+            const manage = document.getElementById('admin-manage');
+            const membersView = document.getElementById('view-members');
+            if (!login || !manage) return;
+
+            if (isAdminLoggedIn()) {
+                login.classList.add('hidden-view');
+                manage.classList.remove('hidden-view');
+                if (membersView) membersView.classList.add('hidden-view');
+                refreshRosterViews();
+            } else {
+                manage.classList.add('hidden-view');
+                login.classList.remove('hidden-view');
+            }
+        }
+
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+            const email = (document.getElementById('admin-email').value || '').trim().toLowerCase();
+            const password = (document.getElementById('admin-password').value || '').trim();
+            const errorEl = document.getElementById('admin-login-error');
+
+            try {
+                const token = await sha256Hex(email + '::' + _AUTH_KEY + '::' + password);
+
+                if (token === _AUTH_VAULT || token === _AUTH_VAULT_ALT) {
+                    adminSessionMemory = true;
+                    try {
+                        sessionStorage.setItem(ADMIN_SESSION_KEY, '1');
+                    } catch (e) { }
+                    if (errorEl) errorEl.textContent = '';
+                    document.getElementById('admin-email').value = '';
+                    document.getElementById('admin-password').value = '';
+                    syncAdminScreen();
+                    history.replaceState(null, '', '#admin');
+                    showRosterToast('เข้าสู่ระบบสำเร็จ ยินดีต้อนรับ! 👑');
+                    return false;
+                }
+            } catch (err) { }
+
+            if (errorEl) errorEl.textContent = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+            return false;
+        }
+
+        function adminLogout() {
+            adminSessionMemory = false;
+            try {
+                sessionStorage.removeItem(ADMIN_SESSION_KEY);
+            } catch (e) { }
+            syncAdminScreen();
+            navigateTo('members');
+            showRosterToast('ออกจากระบบเรียบร้อย');
+        }
+
+        function setAdminRole(role) {
+            const select = document.getElementById('add-role');
+            if (select) select.value = role;
+            syncRoleSelectorUI(role);
+        }
+
+        function syncRoleSelectorUI(role) {
+            const picker = document.getElementById('adminRolePicker');
+            if (!picker) return;
+            picker.querySelectorAll('.role-pill-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = picker.querySelector(`.role-pill-${role}`);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        function previewAdminImage(input) {
+            const file = input.files && input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const img = new Image();
+                img.onload = function () {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 360;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxDim) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        }
+                    } else {
+                        if (height > maxDim) {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    pendingImageData = canvas.toDataURL('image/jpeg', 0.82);
+                    document.getElementById('add-img-preview').src = pendingImageData;
+                    document.getElementById('add-img').value = '';
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Add auto preview for direct URL input
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.id === 'add-img' && e.target.value.trim()) {
+                pendingImageData = '';
+                document.getElementById('add-img-preview').src = e.target.value.trim();
+            }
+        });
+
+        function handleAddMember(event) {
+            event.preventDefault();
+            const name = (document.getElementById('add-name').value || '').trim();
+            if (!name) return false;
+
+            const imgInput = (document.getElementById('add-img').value || '').trim();
+            const displayImg = pendingImageData || imgInput || 'logo.png';
+            const fb = (document.getElementById('add-fb').value || '').trim();
+            const ig = (document.getElementById('add-ig').value || '').trim();
+            const role = (document.getElementById('add-role').value || 'founder').toLowerCase();
+
+            if (editingMemberId) {
+                const idx = liveMembers.findIndex(m => m.id === editingMemberId);
+                if (idx !== -1) {
+                    liveMembers[idx] = {
+                        id: editingMemberId,
+                        name: name,
+                        role: role,
+                        img: displayImg,
+                        fb: fb,
+                        ig: ig
+                    };
+                    showRosterToast('อัปเดตข้อมูลสำเร็จ! ✨');
+                }
+                cancelEditMember();
+            } else {
+                const newMember = {
+                    id: 'm-' + Date.now(),
+                    name: name,
+                    role: role,
+                    img: displayImg,
+                    fb: fb,
+                    ig: ig
+                };
+                liveMembers.unshift(newMember);
+                showRosterToast('เพิ่มสมาชิกเรียบร้อย! 🎉');
+                document.getElementById('admin-add-form').reset();
+                document.getElementById('add-img-preview').src = 'logo.png';
+                pendingImageData = '';
+                setAdminRole('founder');
+            }
+
+            saveRoster();
+            refreshRosterViews();
+            return false;
+        }
+
+        function editMember(id) {
+            const member = liveMembers.find(m => m.id === id);
+            if (!member) return;
+            editingMemberId = id;
+
+            document.getElementById('add-name').value = member.name || '';
+            document.getElementById('add-img').value = (member.img && !member.img.startsWith('data:')) ? member.img : '';
+            document.getElementById('add-img-preview').src = member.img || 'logo.png';
+            document.getElementById('add-fb').value = member.fb || '';
+            document.getElementById('add-ig').value = member.ig || '';
+            pendingImageData = (member.img && member.img.startsWith('data:')) ? member.img : '';
+
+            setAdminRole(member.role || 'member');
+
+            document.getElementById('admin-form-heading').innerHTML = '<i class="fas fa-user-pen" style="margin-right: 6px; color: #ff2a44;"></i> EDIT MEMBER';
+            document.getElementById('btn-admin-submit').innerText = 'SAVE CHANGES →';
+            document.getElementById('btn-admin-cancel').classList.remove('hidden-view');
+
+            const itemEl = document.getElementById(`admin-item-${id}`);
+            if (itemEl) {
+                document.querySelectorAll('.admin-live-item').forEach(el => el.classList.remove('is-editing'));
+                itemEl.classList.add('is-editing');
+            }
+
+            document.getElementById('admin-add-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEditMember() {
+            editingMemberId = null;
+            document.getElementById('admin-add-form').reset();
+            document.getElementById('add-img-preview').src = 'logo.png';
+            pendingImageData = '';
+            setAdminRole('founder');
+            document.getElementById('admin-form-heading').innerHTML = '<i class="fas fa-user-plus" style="margin-right: 6px; color: #fff;"></i> ADD MEMBER';
+            document.getElementById('btn-admin-submit').innerText = 'ADD NAME →';
+            document.getElementById('btn-admin-cancel').classList.add('hidden-view');
+            document.querySelectorAll('.admin-live-item').forEach(el => el.classList.remove('is-editing'));
+        }
+
+        async function deleteMember(id) {
+            const member = liveMembers.find(m => m.id === id);
+            const memberName = member ? member.name : '';
+            const confirmed = await showCustomConfirm('ต้องการลบรายชื่อนี้ใช่หรือไม่?', memberName);
+            if (!confirmed) return;
+
+            const itemEl = document.getElementById(`admin-item-${id}`);
+            if (itemEl) {
+                itemEl.classList.add('is-removing');
+            }
+            setTimeout(() => {
+                liveMembers = liveMembers.filter(m => m.id !== id);
+                if (editingMemberId === id) {
+                    cancelEditMember();
+                }
+                saveRoster();
+                refreshRosterViews();
+                showRosterToast('ลบรายชื่อเรียบร้อย! 🗑️');
+            }, 200);
+        }
+
+        /* ================================================= */
+        /* --- 🧭 SPA VIEW NAVIGATION --- */
+        /* ================================================= */
+        function navigateTo(targetView) {
+            const homeView = document.getElementById('view-home');
+            const membersView = document.getElementById('view-members');
+            const adminView = document.getElementById('view-admin');
+
+            // Force play audio immediately
+            forcePlayAudio();
+
+            if (targetView === 'members') {
+                homeView.classList.add('hidden-view');
+                adminView.classList.add('hidden-view');
+                membersView.classList.remove('hidden-view');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                history.replaceState(null, '', '#members');
+            } else if (targetView === 'admin') {
+                homeView.classList.add('hidden-view');
+                membersView.classList.add('hidden-view');
+                adminView.classList.remove('hidden-view');
+                syncAdminScreen();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                history.replaceState(null, '', '#admin');
+            } else {
+                membersView.classList.add('hidden-view');
+                adminView.classList.add('hidden-view');
+                homeView.classList.remove('hidden-view');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                history.replaceState(null, '', '#home');
+            }
+        }
+
+        /* ================================================= */
+        /* --- ðŸ’¿ ULTRA-RESPONSIVE LOCAL AUDIO MUSIC ENGINE --- */
+        /* ================================================= */
+        const audio = document.getElementById('bg-audio') || new Audio('music.mp3');
+        audio.src = 'music.mp3';
+        audio.loop = true;
+        audio.preload = 'auto';
+
+        let currentVolume = 80;
+        let isMuted = false;
+        let isPlaying = false;
+        let userPausedManually = false;
+
+        audio.volume = currentVolume / 100;
+
+        function updatePlayerUI(playing) {
+            isPlaying = playing;
+            const container = document.getElementById('player-container');
+            const playIcon = document.getElementById('play-icon');
+            const musicStatus = document.getElementById('music-status');
+
+            if (playing) {
+                container.classList.add('playing');
+                playIcon.className = 'fas fa-pause vinyl-action-icon';
+                if (musicStatus) musicStatus.innerText = 'NOW PLAYING';
+            } else {
+                container.classList.remove('playing');
+                playIcon.className = 'fas fa-play vinyl-action-icon';
+                if (musicStatus) musicStatus.innerText = 'PAUSED';
+            }
+        }
+
+        function forcePlayAudio() {
+            if (userPausedManually) return;
+            if (audio.paused) {
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        updatePlayerUI(true);
+                        removeGestureListeners();
+                    }).catch(e => {
+                        // Will be unlocked on first touch/mouse movement
+                    });
+                }
+            }
+        }
+
+        function togglePlay() {
+            if (audio.paused) {
+                userPausedManually = false;
+                audio.play().then(() => {
+                    updatePlayerUI(true);
+                    removeGestureListeners();
+                }).catch(e => {
+                    console.log("Audio play error:", e);
+                });
+            } else {
+                userPausedManually = true;
+                removeGestureListeners();
+                audio.pause();
+                updatePlayerUI(false);
+            }
+        }
+
+        function changeVolume(val) {
+            currentVolume = parseInt(val, 10);
+            if (currentVolume === 0) {
+                audio.muted = true;
+                isMuted = true;
+                updateVolumeIcon(0);
+            } else {
+                if (isMuted) {
+                    audio.muted = false;
+                    isMuted = false;
+                }
+                audio.volume = currentVolume / 100;
+                updateVolumeIcon(currentVolume);
+            }
+            document.getElementById('vol-text').innerText = currentVolume + '%';
+        }
+
+        function toggleMute(e) {
+            if (e) e.stopPropagation();
+            if (isMuted) {
+                audio.muted = false;
+                isMuted = false;
+                const restoreVol = currentVolume > 0 ? currentVolume : 80;
+                currentVolume = restoreVol;
+                audio.volume = restoreVol / 100;
+                document.getElementById('vol-slider').value = restoreVol;
+                document.getElementById('vol-text').innerText = restoreVol + '%';
+                updateVolumeIcon(restoreVol);
+            } else {
+                audio.muted = true;
+                isMuted = true;
+                document.getElementById('vol-slider').value = 0;
+                document.getElementById('vol-text').innerText = '0%';
+                updateVolumeIcon(0);
+            }
+        }
+
+        function updateVolumeIcon(vol) {
+            const icon = document.getElementById('vol-icon');
+            if (!icon) return;
+            if (vol === 0) icon.className = 'fas fa-volume-xmark vol-btn-icon';
+            else if (vol < 50) icon.className = 'fas fa-volume-low vol-btn-icon';
+            else icon.className = 'fas fa-volume-high vol-btn-icon';
+        }
+
+        // Attach Click to Vinyl Disc
+        document.getElementById('master-play').addEventListener('click', function (e) {
+            const infoBox = document.getElementById('vinylInfoBox');
+            if (window.innerWidth <= 768 && infoBox) {
+                infoBox.classList.toggle('active');
+            }
+            togglePlay();
+        });
+
+        // Audio state listeners
+        audio.addEventListener('play', () => updatePlayerUI(true));
+        audio.addEventListener('pause', () => updatePlayerUI(false));
+
+        /* --- âš¡ Immediate Autoplay & Gesture Unlock Engine --- */
+        const gestureEvents = ['click', 'touchstart', 'touchend', 'mousedown', 'pointerdown', 'mousemove', 'scroll', 'wheel', 'keydown'];
+
+        function onUserGesture() {
+            forcePlayAudio();
+        }
+
+        function addGestureListeners() {
+            gestureEvents.forEach(evt => {
+                window.addEventListener(evt, onUserGesture, { passive: true });
+                document.addEventListener(evt, onUserGesture, { passive: true });
+            });
+        }
+
+        function removeGestureListeners() {
+            gestureEvents.forEach(evt => {
+                window.removeEventListener(evt, onUserGesture);
+                document.removeEventListener(evt, onUserGesture);
+            });
+        }
+
+        // 1. Try playing immediately as script loads
+        forcePlayAudio();
+
+        // 2. Add full gesture listeners for instantaneous unlock
+        addGestureListeners();
+
+        // 3. When DOM is ready and window is loaded, retry immediately
+        document.addEventListener('DOMContentLoaded', () => {
+            loadRoster();
+            startRealtimeStream();
+            forcePlayAudio();
+            if (window.location.hash === '#admin') {
+                navigateTo('admin');
+            } else if (window.location.hash === '#members') {
+                navigateTo('members');
+            }
+        });
+
+        window.addEventListener('load', () => {
+            forcePlayAudio();
+        });
+
+        // 4. When page becomes visible/focused
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                if (!userPausedManually && audio.paused) {
+                    forcePlayAudio();
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

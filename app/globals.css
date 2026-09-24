@@ -1,0 +1,254 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-glow: rgba(255, 42, 68, 0.35);
+  --accent-red: #ff2a44;
+  --accent-red-hover: #ff4757;
+  --accent-red-glow: rgba(255, 42, 68, 0.45);
+  --accent-white: #ffffff;
+  --glass-bg: rgba(12, 12, 16, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-red: rgba(255, 42, 68, 0.35);
+  --bg-dark: #040407;
+  --card-bg: rgba(14, 14, 19, 0.75);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --theme-color: #ff2a44;
+  --theme-color-hover: #ff4757;
+  --theme-color-glow: rgba(255, 42, 68, 0.5);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #030306;
+  color: #ffffff;
+  font-family: var(--font-prompt), var(--font-kanit), var(--font-inter), sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Custom modern scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #060609;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 42, 68, 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 42, 68, 0.65);
+}
+
+/* Typography override for smooth, rounded, elite typography */
+.orbitron,
+.font-orbitron,
+.font-heading {
+  font-family: var(--font-prompt), var(--font-kanit), sans-serif;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.kanit {
+  font-family: var(--font-prompt), var(--font-kanit), sans-serif;
+}
+
+/* Utilities */
+.text-glow {
+  text-shadow: 0 0 15px var(--theme-color-glow);
+}
+
+.box-glow {
+  box-shadow: 0 0 25px var(--theme-color-glow);
+}
+
+.glass-panel {
+  background: rgba(14, 14, 19, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 12s linear infinite;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-block;
+  animation: marquee 30s linear infinite;
+  white-space: nowrap;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Themes */
+html.theme-light,
+.theme-light {
+  color-scheme: light;
+}
+
+html.theme-light body,
+.theme-light body {
+  background-color: #f8fafc !important;
+  color: var(--theme-text, #0f172a) !important;
+}
+
+html.theme-light .site-bg-overlay,
+.theme-light .site-bg-overlay {
+  background: linear-gradient(rgba(248, 250, 252, 0.88), rgba(241, 245, 249, 0.96)) !important;
+}
+
+html.theme-light .bg-black\/55,
+html.theme-light .bg-black\/50,
+html.theme-light .bg-black\/45,
+html.theme-light .bg-black\/60,
+html.theme-light .bg-black\/40,
+html.theme-light .bg-black\/80,
+html.theme-light .bg-black\/85,
+html.theme-light .bg-black\/90,
+html.theme-light .bg-black\/70,
+html.theme-light .bg-black\/30,
+html.theme-light .glass-panel {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  color: var(--theme-text, #0f172a) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+html.theme-light .text-white:not([data-keep-color]):not(.keep-white) {
+  color: var(--theme-text, #0f172a) !important;
+}
+
+html.theme-light .text-white\/90:not([data-keep-color]):not(.keep-white),
+html.theme-light .text-white\/95:not([data-keep-color]):not(.keep-white),
+html.theme-light .text-white\/80:not([data-keep-color]):not(.keep-white) {
+  color: rgba(15, 23, 42, 0.85) !important;
+}
+
+html.theme-light .text-white\/70:not([data-keep-color]):not(.keep-white),
+html.theme-light .text-white\/60:not([data-keep-color]):not(.keep-white) {
+  color: rgba(15, 23, 42, 0.65) !important;
+}
+
+html.theme-light .text-white\/50:not([data-keep-color]):not(.keep-white),
+html.theme-light .text-white\/40:not([data-keep-color]):not(.keep-white),
+html.theme-light .text-white\/30:not([data-keep-color]):not(.keep-white),
+html.theme-light .text-white\/35:not([data-keep-color]):not(.keep-white) {
+  color: rgba(15, 23, 42, 0.45) !important;
+}
+
+html.theme-light .border-white\/10,
+html.theme-light .border-white\/15,
+html.theme-light .border-white\/20,
+html.theme-light .border-white\/25,
+html.theme-light .border-white\/5 {
+  border-color: rgba(15, 23, 42, 0.12) !important;
+}
+
+html.theme-light .bg-white\/5,
+html.theme-light .bg-white\/\[0\.04\],
+html.theme-light .bg-white\/\[0\.02\],
+html.theme-light .bg-white\/10 {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Custom Text Color Mapping for Non-Light Modes */
+body:not([data-fixed-theme]):not(.theme-light) .text-white:not([data-keep-color]):not(.keep-white) {
+  color: var(--theme-text, #ffffff) !important;
+}
+
+body:not([data-fixed-theme]):not(.theme-light) .text-white\/90:not([data-keep-color]):not(.keep-white),
+body:not([data-fixed-theme]):not(.theme-light) .text-white\/95:not([data-keep-color]):not(.keep-white) {
+  color: color-mix(in srgb, var(--theme-text, #ffffff) 90%, transparent) !important;
+}
+
+body:not([data-fixed-theme]):not(.theme-light) .text-white\/80:not([data-keep-color]):not(.keep-white) {
+  color: color-mix(in srgb, var(--theme-text, #ffffff) 80%, transparent) !important;
+}
+
+body:not([data-fixed-theme]):not(.theme-light) .text-white\/70:not([data-keep-color]):not(.keep-white) {
+  color: color-mix(in srgb, var(--theme-text, #ffffff) 70%, transparent) !important;
+}
+
+body:not([data-fixed-theme]):not(.theme-light) .text-white\/60:not([data-keep-color]):not(.keep-white) {
+  color: color-mix(in srgb, var(--theme-text, #ffffff) 60%, transparent) !important;
+}
+
+body:not([data-fixed-theme]):not(.theme-light) .text-white\/50:not([data-keep-color]):not(.keep-white) {
+  color: color-mix(in srgb, var(--theme-text, #ffffff) 50%, transparent) !important;
+}
+
+body:not([data-fixed-theme]):not(.theme-light) .text-white\/40:not([data-keep-color]):not(.keep-white) {
+  color: color-mix(in srgb, var(--theme-text, #ffffff) 40%, transparent) !important;
+}
+
+/* High Contrast Theme */
+html.theme-contrast,
+.theme-contrast {
+  color-scheme: dark;
+}
+
+html.theme-contrast body,
+.theme-contrast body {
+  background-color: #000000 !important;
+  color: var(--theme-contrast, #ffffff) !important;
+}
+
+html.theme-contrast .site-bg-overlay,
+.theme-contrast .site-bg-overlay {
+  background: #000000 !important;
+}
+
+html.theme-contrast .border-white\/10,
+html.theme-contrast .border-white\/15,
+html.theme-contrast .border-white\/20,
+html.theme-contrast .border-white\/5 {
+  border-color: var(--theme-contrast, #ffffff) !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2) !important;
+}
+
+html.theme-contrast .bg-black\/55,
+html.theme-contrast .bg-black\/50,
+html.theme-contrast .bg-black\/60,
+html.theme-contrast .bg-black\/80,
+html.theme-contrast .bg-black\/85,
+html.theme-contrast .bg-black\/90 {
+  background-color: #000000 !important;
+  border-width: 2px !important;
+  border-color: var(--theme-contrast, #ffffff) !important;
+}
+

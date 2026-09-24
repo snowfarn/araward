@@ -1,0 +1,39 @@
+{
+  "siteName": "Slumzick",
+  "description": "The ultimate syndicate of blood brothers, absolute unity, and unrivaled supremacy.",
+  "backgroundUrl": "https://cdn.discordapp.com/attachments/1551149152417873950/1552518394245550181/433eaf346d0a0475c1a2cb228bed9ade.gif?ex=6ab5e6ed&is=6ab4956d&hm=09e212a392e7274e832bd530e979e85cca7030e63a1437e37fb540b3ce6fe201",
+  "logoUrl": "https://cdn.discordapp.com/attachments/1551149152417873950/1552517753926058024/5ba12d14aec619633a717f5ed1bc4d2c.png?ex=6ab5e654&is=6ab494d4&hm=db632a6088ae4d0c03c98c5441ab05b79b29347752d9b83dac786c247079420f",
+  "primaryColor": "#ff2a44",
+  "textColor": "#ffffff",
+  "contrastColor": "#ffffff",
+  "theme": "dark",
+  "discordInviteUrl": "https://discord.gg/",
+  "particleType": "sakura",
+  "particleSpeed": 1,
+  "particleDensity": 1,
+  "announcementTitle": "TEST",
+  "announcement": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "announcementBannerUrl": "/uploads/1790245341806_ffsbackgrounds.gif",
+  "bannerSlideInterval": 5,
+  "banners": [
+    {
+      "id": "banner_1790245341813",
+      "url": "/uploads/1790245341806_ffsbackgrounds.gif",
+      "caption": ""
+    },
+    {
+      "id": "banner_1790245424525",
+      "url": "/uploads/1790245424501_5e5c0fc411760a7adc814c3d045af878.gif",
+      "caption": ""
+    }
+  ],
+  "socials": {
+    "facebook": "",
+    "youtube": "",
+    "tiktok": "",
+    "instagram": ""
+  },
+  "musicUrl": "https://youtu.be/WmlGzY1iWAc?si=iWAkWAVeM1kepsDI",
+  "musicTitle": "",
+  "musicCover": ""
+}

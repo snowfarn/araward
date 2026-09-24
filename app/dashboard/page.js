@@ -1,0 +1,36 @@
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../api/auth/[...nextauth]/route";
+import { getMembers, getApplications } from "@/lib/data";
+import ClientDashboard from "./ClientDashboard";
+
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
+
+  let memberStatus = null; // null, 'pending', 'member'
+  let memberData = null;
+
+  if (session?.user) {
+    const members = await getMembers();
+    const apps = await getApplications();
+    const isMember = members.find(m => m.id === session.user.id);
+    const isPending = apps.find(a => a.id === session.user.id);
+
+    if (isMember) {
+      if (isMember.banned) {
+        memberStatus = 'banned';
+      } else {
+        memberStatus = 'member';
+      }
+      memberData = isMember;
+    } else if (isPending) {
+      memberStatus = 'pending';
+    }
+  }
+
+  return (
+    <ClientDashboard 
+      initialStatus={memberStatus} 
+      initialMemberData={memberData} 
+    />
+  );
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "founder",
+    "name": "OWNER",
+    "icon": "Crown",
+    "color": "#000000",
+    "contrastColor": "#ff2a44"
+  },
+  {
+    "id": "leader",
+    "name": "MEMBER GABG",
+    "icon": "Star",
+    "color": "#ff001e",
+    "contrastColor": "#ffffff"
+  },
+  {
+    "id": "member",
+    "name": "GANGLIST.WAY",
+    "icon": "User",
+    "color": "#ffffff",
+    "contrastColor": "#ff2a44"
+  }
+]
