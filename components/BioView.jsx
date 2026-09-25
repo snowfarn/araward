@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, 
@@ -56,6 +56,38 @@ export default function BioView({
 }) {
   const textColor = member.textColor || '#ffffff';
   const cardStyle = member.cardStyle || 'glass';
+
+  // Live view tracking with micro-animation & anti-spam cooldown
+  const [currentViews, setCurrentViews] = useState(displayViews || 0);
+  const [justIncremented, setJustIncremented] = useState(false);
+
+  useEffect(() => {
+    if (!member?.id) return;
+
+    // Keep state synced with prop if prop changes
+    if (typeof displayViews === 'number' && displayViews > currentViews) {
+      setCurrentViews(displayViews);
+    }
+
+    const sessionKey = `viewed_${member.id}`;
+    const lastViewed = sessionStorage.getItem(sessionKey);
+    const now = Date.now();
+    const shouldIncrement = !lastViewed || (now - parseInt(lastViewed, 10) > 45000);
+
+    if (shouldIncrement) {
+      sessionStorage.setItem(sessionKey, now.toString());
+      fetch(`/api/views/${member.id}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && typeof data.views === 'number') {
+            setCurrentViews(data.views);
+            setJustIncremented(true);
+            setTimeout(() => setJustIncremented(false), 2500);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [member?.id, displayViews]);
 
   const RoleIcon = (role?.icon && ICON_MAP[role.icon]) ? ICON_MAP[role.icon] : Shield;
 
@@ -262,14 +294,27 @@ export default function BioView({
         </div>
       </div>
 
-      {/* Bottom-Left View Counter */}
+      {/* Bottom-Left Live View Counter with Micro-Animation */}
       <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-30">
         <div 
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-xl text-xs font-mono font-bold tracking-wider select-none transition-all ${counterBoxClasses}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-xl text-xs font-mono font-bold tracking-wider select-none transition-all duration-300 ${counterBoxClasses} ${
+            justIncremented ? 'ring-2 ring-emerald-400/50 scale-105 shadow-[0_0_15px_rgba(52,211,153,0.4)]' : ''
+          }`}
           style={{ color: `${textColor}cc` }}
         >
-          <Eye size={13} style={{ color: `${textColor}99` }} />
-          <span>{displayViews}</span>
+          <Eye 
+            size={13} 
+            className={`transition-colors duration-300 ${justIncremented ? 'text-emerald-400 animate-pulse' : ''}`}
+            style={!justIncremented ? { color: `${textColor}99` } : {}} 
+          />
+          <span className={`transition-colors duration-300 ${justIncremented ? 'text-emerald-300 font-extrabold' : ''}`}>
+            {currentViews}
+          </span>
+          {justIncremented && (
+            <span className="text-[10px] text-emerald-400 font-bold animate-bounce ml-0.5">
+              +1
+            </span>
+          )}
         </div>
       </div>
     </main>

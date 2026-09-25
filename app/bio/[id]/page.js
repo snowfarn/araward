@@ -1,4 +1,4 @@
-import { getSiteSettings, getRoles, getMemberByIdOrSlug, incrementMemberViews } from '@/lib/data';
+import { getSiteSettings, getRoles, getMemberByIdOrSlug, getMemberViews } from '@/lib/data';
 import BioView from '@/components/BioView';
 import { notFound } from 'next/navigation';
 import { ShieldAlert } from 'lucide-react';
@@ -102,19 +102,13 @@ export default async function BioPage({ params }) {
     );
   }
 
-  // Increment view counter
-  let displayViews = (member.views || 0) + 1;
-  try {
-    const updated = await incrementMemberViews(member.id);
-    if (updated) displayViews = updated;
-  } catch (err) {
-    console.error('[views] error:', err);
-  }
-
-  const [roles, settings] = await Promise.all([
+  const [roles, settings, liveViews] = await Promise.all([
     getRoles(),
-    getSiteSettings()
+    getSiteSettings(),
+    getMemberViews(member.id)
   ]);
+
+  const displayViews = liveViews || member.views || 0;
 
   const role = roles.find(r => r.id === member.roleId) || null;
   const primaryColor = member.primaryColor || role?.color || '#ff2a44';
