@@ -45,8 +45,10 @@ export async function generateViewport() {
 }
 
 export default async function Home() {
-  const settings = await getSiteSettings();
-  const members = await getMembers();
+  const [settings, members] = await Promise.all([
+    getSiteSettings(),
+    getMembers()
+  ]);
 
   return (
     <main className="min-h-screen flex flex-col justify-between items-center relative pt-2 sm:pt-3 pb-4 sm:pb-6 px-3 sm:px-6 overflow-x-hidden">

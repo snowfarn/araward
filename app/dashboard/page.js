@@ -11,8 +11,10 @@ export default async function DashboardPage() {
   let memberData = null;
 
   if (session?.user) {
-    const members = await getMembers();
-    const apps = await getApplications();
+    const [members, apps] = await Promise.all([
+      getMembers(),
+      getApplications()
+    ]);
     const isMember = members.find(m => m.id === session.user.id);
     const isPending = apps.find(a => a.id === session.user.id);
 

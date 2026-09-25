@@ -18,7 +18,7 @@ import {
   Sparkles,
   ChevronRight
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 // Icon map for role icons
@@ -41,8 +41,6 @@ const ICON_MAP = {
 };
 
 export default function MemberCard({ member, role }) {
-  const router = useRouter();
-
   if (!member || !role) return null;
 
   // Safe color fallback (if role.color is black, fallback to vibrant crimson)
@@ -51,11 +49,15 @@ export default function MemberCard({ member, role }) {
   const isCustomIconImage = role.icon && (role.icon.startsWith('http') || role.icon.startsWith('/'));
 
   return (
-    <motion.div 
-      onClick={() => router.push(`/bio/${member.slug || member.id}`)}
-      whileHover={{ y: -2, scale: 1.01 }}
-      whileTap={{ scale: 0.985 }}
-      className="group rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 flex items-center justify-between cursor-pointer relative overflow-hidden backdrop-blur-2xl transition-all duration-300 border shadow-lg hover:shadow-2xl active:scale-[0.98] w-full"
+    <Link 
+      href={`/bio/${member.slug || member.id}`} 
+      prefetch={true}
+      className="block w-full text-left no-underline select-none"
+    >
+      <motion.div 
+        whileHover={{ y: -2, scale: 1.01 }}
+        whileTap={{ scale: 0.985 }}
+        className="group rounded-2xl sm:rounded-3xl p-3 sm:p-3.5 flex items-center justify-between cursor-pointer relative overflow-hidden backdrop-blur-2xl transition-all duration-300 border shadow-lg hover:shadow-2xl active:scale-[0.98] w-full"
       style={{
         background: 'linear-gradient(135deg, rgba(16, 16, 22, 0.92), rgba(9, 9, 13, 0.97))',
         borderColor: `${roleColor}35`,
@@ -156,5 +158,6 @@ export default function MemberCard({ member, role }) {
         </div>
       </div>
     </motion.div>
+  </Link>
   );
 }

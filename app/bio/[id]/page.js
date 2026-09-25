@@ -102,13 +102,14 @@ export default async function BioPage({ params }) {
     );
   }
 
-  // Track and increment view counter
-  const updatedViews = await incrementMemberViews(member.id);
-  const displayViews = updatedViews || member.views || 1;
+  // Increment view counter asynchronously (non-blocking for instant page render)
+  const displayViews = (member.views || 0) + 1;
+  incrementMemberViews(member.id).catch(err => console.error('[views] error:', err));
 
-  const roles = await getRoles();
-  const role = roles.find(r => r.id === member.roleId);
-  const settings = await getSiteSettings();
+  const [roles, settings] = await Promise.all([
+    getRoles(),
+    getSiteSettings()
+  ]);
 
   const primaryColor = member.primaryColor || role?.color || '#ff2a44';
   const roleColor = (role?.color && role.color !== '#000000') ? role.color : primaryColor;

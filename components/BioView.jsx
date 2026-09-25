@@ -119,6 +119,7 @@ export default function BioView({
       {/* Top Floating Back Navigation */}
       <Link 
         href="/members" 
+        prefetch={true}
         className="fixed top-4 left-4 sm:top-6 sm:left-6 text-white/80 hover:text-white transition-all z-40 flex items-center gap-2 font-bold text-xs bg-black/60 border border-white/15 px-3.5 sm:px-4 py-2 rounded-full backdrop-blur-2xl hover:bg-white/10 shadow-xl group"
       >
         <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform text-[#ff2a44]" /> 

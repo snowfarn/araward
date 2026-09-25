@@ -6,10 +6,12 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function MembersPage() {
-  const settings = await getSiteSettings();
-  const allMembers = await getMembers();
+  const [settings, allMembers, roles] = await Promise.all([
+    getSiteSettings(),
+    getMembers(),
+    getRoles()
+  ]);
   const members = allMembers.filter(m => !m.banned);
-  const roles = await getRoles();
 
   return (
     <main className="min-h-screen flex flex-col relative pb-20 overflow-x-hidden">

@@ -200,7 +200,7 @@ export default function HomeContent({ settings, membersCount = 1 }) {
           className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center px-4 max-w-lg mx-auto"
         >
           {/* Button 1: สมัครเข้าแก๊ง (Apply to Gang / Login with Discord -> /dashboard) */}
-          <Link href="/dashboard" className="w-full sm:w-1/2">
+          <Link href="/dashboard" prefetch={true} className="w-full sm:w-1/2">
             <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
@@ -233,7 +233,7 @@ export default function HomeContent({ settings, membersCount = 1 }) {
           </Link>
 
           {/* Button 2: ดูรายชื่อคนในแก๊ง (View Roster & Members -> /members) */}
-          <Link href="/members" className="w-full sm:w-1/2">
+          <Link href="/members" prefetch={true} className="w-full sm:w-1/2">
             <motion.div
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}

@@ -7,6 +7,7 @@ import {
   updateSiteSettings, 
   updateRoles, 
   updateMembers, 
+  updateMemberRole,
   updateApplications,
   banMember,
   unbanMember,
@@ -165,6 +166,7 @@ export default function AdminClient({ initialSettings, initialRoles, initialMemb
 
   // Search and modal state for members
   const [memberSearch, setMemberSearch] = useState('');
+  const [adminRoleFilter, setAdminRoleFilter] = useState('all');
   const [selectedMemberModal, setSelectedMemberModal] = useState(null);
   const [newBannerInput, setNewBannerInput] = useState('');
 
@@ -363,10 +365,83 @@ export default function AdminClient({ initialSettings, initialRoles, initialMemb
   };
 
   const handleRoleChange = async (memberId, newRoleId) => {
-    const newMembers = members.map(m => m.id === memberId ? { ...m, roleId: newRoleId } : m);
-    setMembers(newMembers);
-    await updateMembers(newMembers);
-    showToast(lang === 'th' ? 'อัปเดตยศสมาชิกแล้ว' : 'Updated member role');
+    if (!memberId || !newRoleId) return;
+    const prevMembers = [...members];
+    const targetMember = members.find(m => m.id === memberId);
+    const targetRole = roles.find(r => r.id === newRoleId);
+    const memberName = targetMember?.name || 'Member';
+    const roleName = targetRole?.name || 'Role';
+
+    // 1. Optimistic UI update immediately
+    const updatedMembers = members.map(m => m.id === memberId ? { ...m, roleId: newRoleId } : m);
+    setMembers(updatedMembers);
+    if (selectedMemberModal?.id === memberId) {
+      setSelectedMemberModal(prev => prev ? { ...prev, roleId: newRoleId } : null);
+    }
+
+    try {
+      // 2. Call dedicated lightweight API endpoint (immune to server action payload limits)
+      const res = await fetch('/api/admin/members/role', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId, roleId: newRoleId })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        if (Array.isArray(data.members)) {
+          setMembers(data.members);
+        }
+        showToast(
+          lang === 'th' 
+            ? `เปลี่ยนยศของ ${memberName} เป็น "${roleName}" และบันทึกอัตโนมัติเรียบร้อย` 
+            : `Updated ${memberName}'s role to "${roleName}"`
+        );
+      } else {
+        // Fallback to Server Action
+        const actionRes = await updateMemberRole(memberId, newRoleId);
+        if (actionRes?.success) {
+          if (Array.isArray(actionRes.members)) {
+            setMembers(actionRes.members);
+          }
+          showToast(
+            lang === 'th' 
+              ? `เปลี่ยนยศของ ${memberName} เป็น "${roleName}" และบันทึกอัตโนมัติเรียบร้อย` 
+              : `Updated ${memberName}'s role to "${roleName}"`
+          );
+        } else {
+          // Revert on failure
+          setMembers(prevMembers);
+          if (selectedMemberModal?.id === memberId) {
+            setSelectedMemberModal(targetMember);
+          }
+          showToast(data.error || actionRes?.message || 'Error updating role', 'error');
+        }
+      }
+    } catch (err) {
+      console.error('Role update error:', err);
+      // Fallback attempt to Server Action
+      try {
+        const actionRes = await updateMemberRole(memberId, newRoleId);
+        if (actionRes?.success) {
+          if (Array.isArray(actionRes.members)) setMembers(actionRes.members);
+          showToast(
+            lang === 'th' 
+              ? `เปลี่ยนยศของ ${memberName} เป็น "${roleName}" และบันทึกอัตโนมัติเรียบร้อย` 
+              : `Updated ${memberName}'s role to "${roleName}"`
+          );
+          return;
+        }
+      } catch (fallbackErr) {
+        console.error('Server action fallback also failed:', fallbackErr);
+      }
+      // Revert on failure
+      setMembers(prevMembers);
+      if (selectedMemberModal?.id === memberId) {
+        setSelectedMemberModal(targetMember);
+      }
+      showToast(lang === 'th' ? 'เกิดข้อผิดพลาดในการบันทึกยศ' : 'Failed to update role', 'error');
+    }
   };
 
   // --- APPLICATION MANAGEMENT (via API for atomic operations) ---
@@ -433,8 +508,10 @@ export default function AdminClient({ initialSettings, initialRoles, initialMemb
     router.push('/');
   };
 
-  // Filter members in admin
+  // Filter members in admin (by role filter tab + text search)
   const filteredMembers = members.filter(m => {
+    const matchRole = adminRoleFilter === 'all' || m.roleId === adminRoleFilter;
+    if (!matchRole) return false;
     if (!memberSearch) return true;
     const q = memberSearch.toLowerCase();
     const nameMatch = m.name?.toLowerCase().includes(q);
@@ -1517,6 +1594,45 @@ export default function AdminClient({ initialSettings, initialRoles, initialMemb
                 </div>
               </div>
 
+              {/* Role Quick Filter Tabs */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+                <button
+                  type="button"
+                  onClick={() => setAdminRoleFilter('all')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                    adminRoleFilter === 'all'
+                      ? 'bg-white text-black font-bold shadow-md'
+                      : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border border-white/10'
+                  }`}
+                >
+                  {lang === 'th' ? 'ทั้งหมด' : 'All'} ({members.length})
+                </button>
+                {roles.map(r => {
+                  const count = members.filter(m => m.roleId === r.id).length;
+                  const isSelected = adminRoleFilter === r.id;
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setAdminRoleFilter(r.id)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer border ${
+                        isSelected 
+                          ? 'shadow-md font-bold' 
+                          : 'bg-white/5 hover:bg-white/10 text-white/60 hover:text-white border-white/10'
+                      }`}
+                      style={isSelected ? {
+                        backgroundColor: r.color || '#ff2a44',
+                        color: r.contrastColor || '#ffffff',
+                        borderColor: `${r.contrastColor || '#ffffff'}60`,
+                        boxShadow: `0 0 12px ${(r.color || '#ff2a44')}40`
+                      } : {}}
+                    >
+                      {r.name} ({count})
+                    </button>
+                  );
+                })}
+              </div>
+
               {/* Members List */}
               <div className="grid grid-cols-1 gap-3.5">
                 {filteredMembers.length === 0 ? (
@@ -1787,6 +1903,16 @@ export default function AdminClient({ initialSettings, initialRoles, initialMemb
                 <div className="flex justify-between py-1 border-b border-white/5">
                   <span className="text-white/40">ยอดเข้าชม (Total Views):</span>
                   <span className="font-mono font-bold text-emerald-400">{selectedMemberModal.views || 0} ครั้ง</span>
+                </div>
+                <div className="flex items-center justify-between py-1 border-b border-white/5">
+                  <span className="text-white/40">ยศ / ตำแหน่ง (Role):</span>
+                  <select 
+                    value={selectedMemberModal.roleId || ''} 
+                    onChange={(e) => handleRoleChange(selectedMemberModal.id, e.target.value)} 
+                    className="bg-white/[0.08] border border-white/20 focus:border-[#ff2a44] rounded-xl px-2.5 py-1 text-xs text-white outline-none cursor-pointer"
+                  >
+                    {roles.map(r => <option key={r.id} value={r.id} className="bg-neutral-900">{r.name}</option>)}
+                  </select>
                 </div>
                 <div className="flex justify-between py-1">
                   <span className="text-white/40">สถานะการใช้งาน (Status):</span>
