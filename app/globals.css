@@ -30,12 +30,14 @@
 body {
   background-color: #030306;
   color: #ffffff;
-  font-family: var(--font-prompt), var(--font-kanit), var(--font-inter), sans-serif;
+  font-family: var(--font-anuphan), var(--font-jakarta), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
   position: relative;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom modern scrollbar */
@@ -53,17 +55,26 @@ body {
   background: rgba(255, 42, 68, 0.65);
 }
 
-/* Typography override for smooth, rounded, elite typography */
+/* Typography overrides for ultra-sleek, modern, curved, elite aesthetics */
 .orbitron,
 .font-orbitron,
-.font-heading {
-  font-family: var(--font-prompt), var(--font-kanit), sans-serif;
-  letter-spacing: 0.05em;
+.font-heading,
+.font-display {
+  font-family: var(--font-outfit), var(--font-jakarta), var(--font-anuphan), sans-serif;
+  letter-spacing: 0.02em;
   font-weight: 700;
 }
 
-.kanit {
-  font-family: var(--font-prompt), var(--font-kanit), sans-serif;
+.kanit,
+.prompt,
+.font-thai {
+  font-family: var(--font-anuphan), var(--font-jakarta), sans-serif;
+}
+
+/* Eliminate blocky/pixel monospace on Windows */
+.font-mono {
+  font-family: var(--font-jakarta), var(--font-anuphan), ui-sans-serif, sans-serif !important;
+  font-feature-settings: "tnum" on, "lnum" on;
 }
 
 /* Utilities */
@@ -81,6 +92,12 @@ body {
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1.5rem;
+}
+
+/* Off-screen performance booster: skips rendering & GPU decoding until scrolled near viewport */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 90px;
 }
 
 @keyframes spin-slow {
@@ -107,12 +124,45 @@ body {
 
 .animate-marquee {
   display: inline-block;
-  animation: marquee 30s linear infinite;
+  animation: marquee 20s linear infinite;
   white-space: nowrap;
 }
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+@keyframes marquee-seamless {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+.animate-marquee-track {
+  display: flex;
+  flex-shrink: 0;
+  animation: marquee-seamless 22s linear infinite;
+  will-change: transform;
+}
+
+.marquee-container:hover .animate-marquee-track {
+  animation-play-state: paused;
+}
+
+@keyframes banner-progress {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-banner-progress {
+  animation: banner-progress var(--slide-duration, 5s) linear forwards;
 }
 
 /* Themes */
@@ -250,5 +300,22 @@ html.theme-contrast .bg-black\/90 {
   background-color: #000000 !important;
   border-width: 2px !important;
   border-color: var(--theme-contrast, #ffffff) !important;
+}
+
+
+/* ============================================================
+   iOS / Android Safe Area Support (Bottom Navigation Bar)
+   ============================================================ */
+
+/* Utility for safe area inset at bottom (iPhone notch/home indicator) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* When on mobile, add bottom padding so content isn't hidden behind the fixed nav */
+@media (max-width: 639px) {
+  main {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 8px)) !important;
+  }
 }
 

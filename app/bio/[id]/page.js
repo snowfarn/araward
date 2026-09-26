@@ -25,22 +25,23 @@ export async function generateMetadata({ params }) {
     };
   }
 
-  const siteName = settings.siteName || 'Syndicate';
+  const siteName = settings.siteName || 'Slumzick';
   const displayName = member.name || 'Operative';
-  const bioText = member.bio || `${displayName}'s official operative portal and soundtrack on ${siteName}.`;
-  const avatarImg = member.avatar || "https://cdn.discordapp.com/embed/avatars/0.png";
+  const statusQuote = member.discordStatusText ? `"${member.discordStatusText}" ` : '';
+  const bioText = statusQuote || member.bio || `${displayName} • Official Member Profile | ${siteName}`;
+  const avatarImg = member.avatar || member.backgroundUrl || "https://cdn.discordapp.com/embed/avatars/0.png";
 
   return {
-    title: `${displayName} • Bio & Profile | ${siteName}`,
+    title: `${displayName} • ${siteName}`,
     description: bioText,
     openGraph: {
-      title: `${displayName} | ${siteName}`,
+      title: `${displayName} • ${siteName}`,
       description: bioText,
       images: [
         {
           url: avatarImg,
-          width: 256,
-          height: 256,
+          width: 512,
+          height: 512,
           alt: displayName,
         },
       ],

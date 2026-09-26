@@ -17,23 +17,22 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function MusicPlayer({ url, musicTitle, musicCover }) {
+export default function MusicPlayer({ url, musicTitle, musicCover, musicStartTime = 0, initialVolume = 30 }) {
   const pathname = usePathname();
 
-  // Completely disable music player on backend / admin / dashboard / member bio pages
-  if (pathname && (
+  // Check if player should be hidden on backend / admin / dashboard / member bio pages
+  const shouldHide = !url || Boolean(pathname && (
     pathname.startsWith('/bio') || 
     pathname.startsWith('/dashboard') || 
     pathname.startsWith('/secret-admin') ||
     pathname.startsWith('/admin')
-  )) {
-    return null;
-  }
+  ));
 
-  if (!url) return null;
+  const startSec = Math.max(0, parseFloat(musicStartTime) || 0);
 
-  // Default volume: 30% ("ความดังที่ 30% จะได้ไม่ดังเกิน")
-  const [volume, setVolume] = useState(0.3);
+  // Initial volume configured from admin backend (defaults to 30%)
+  const defaultVolDecimal = Math.min(1, Math.max(0, (initialVolume !== undefined && initialVolume !== null ? Number(initialVolume) : 30) / 100));
+  const [volume, setVolume] = useState(defaultVolDecimal);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -43,6 +42,7 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
   const iframeRef = useRef(null);
   const isUserPausedRef = useRef(false);
   const isYouTubePlayingRef = useRef(false);
+  const hasInitialSeekedRef = useRef(false);
 
   // Detect player types
   const isYouTube = url && (url.includes('youtube.com') || url.includes('youtu.be'));
@@ -139,22 +139,34 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
       sendListeningHandshake();
       sendYTCommand('unMute');
       sendYTCommand('setVolume', [targetVol]);
+      if (!hasInitialSeekedRef.current && startSec > 0) {
+        sendYTCommand('seekTo', [startSec, true]);
+        hasInitialSeekedRef.current = true;
+      }
       sendYTCommand('playVideo');
       setIsPlaying(true);
     }
 
     if (audioRef.current && !isYouTube && !isSpotify) {
       audioRef.current.volume = isMuted ? 0 : volume;
+      if (!hasInitialSeekedRef.current && startSec > 0) {
+        audioRef.current.currentTime = startSec;
+        hasInitialSeekedRef.current = true;
+      }
       audioRef.current.play().then(() => {
         setIsPlaying(true);
       }).catch(() => {});
     }
-  }, [isYouTube, isSpotify, isMuted, volume, sendYTCommand, sendListeningHandshake]);
+  }, [isYouTube, isSpotify, isMuted, volume, sendYTCommand, sendListeningHandshake, startSec]);
 
   // Autoplay trigger on mount & refresh with continuous pulse until actively playing
   useEffect(() => {
-    // Initial triggers
-    triggerAudioPlay();
+    if (shouldHide) return;
+
+    // Initial triggers deferred to avoid synchronous setState warning
+    const initTimer = setTimeout(() => {
+      triggerAudioPlay();
+    }, 0);
 
     // Pulse polling: Retries every 350ms until YouTube confirms it is actively playing
     // This solves page load latency differences between lightweight Home and heavier subpages!
@@ -187,8 +199,8 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
       'click', 
       'scroll', 
       'wheel', 
-      'touchmove',
-      'mousemove',
+      'touchmove', 
+      'mousemove', 
       'focus'
     ];
     gestureEvents.forEach(evt => {
@@ -201,16 +213,25 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
         if (!data) return;
 
         if (data.event === 'onReady' || data.event === 'initialDelivery') {
+          if (startSec > 0 && !hasInitialSeekedRef.current) {
+            sendYTCommand('seekTo', [startSec, true]);
+            hasInitialSeekedRef.current = true;
+          }
           if (!isUserPausedRef.current) triggerAudioPlay();
         }
 
-        // Check playerState: 1 = Playing, 2 = Paused
+        // Check playerState: 1 = Playing, 2 = Paused, 0 = Ended (Loop to startSec)
         if (data.info && typeof data.info.playerState === 'number') {
           if (data.info.playerState === 1) {
             isYouTubePlayingRef.current = true;
             setIsPlaying(true);
           } else if (data.info.playerState === 2 && !isUserPausedRef.current) {
             triggerAudioPlay();
+          } else if (data.info.playerState === 0) {
+            // Track ended! Loop back directly to the set start time!
+            sendYTCommand('seekTo', [startSec, true]);
+            sendYTCommand('playVideo');
+            setIsPlaying(true);
           }
         }
       } catch {}
@@ -218,6 +239,7 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
     window.addEventListener('message', handleYTMessage);
 
     return () => {
+      clearTimeout(initTimer);
       clearInterval(pulseInterval);
       clearTimeout(maxTimer);
       gestureEvents.forEach(evt => {
@@ -225,12 +247,13 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
       });
       window.removeEventListener('message', handleYTMessage);
     };
-  }, [triggerAudioPlay]);
+  }, [triggerAudioPlay, shouldHide]);
 
   // Listen to volume/mute state updates
   useEffect(() => {
+    if (shouldHide) return;
     applyVolume(volume, isMuted);
-  }, [volume, isMuted, applyVolume]);
+  }, [volume, isMuted, applyVolume, shouldHide]);
 
   // Toggle Play / Pause
   const togglePlay = (e) => {
@@ -272,7 +295,7 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
     applyVolume(val, false);
   };
 
-  if (!url) return null;
+  if (shouldHide) return null;
 
   // Spotify Embed handler
   if (isSpotify) {
@@ -301,7 +324,23 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
     >
       {/* Hidden Audio Element for direct MP3 */}
       {!isYouTube && !isSpotify && (
-        <audio ref={audioRef} src={url} loop preload="auto" />
+        <audio 
+          ref={audioRef} 
+          src={url} 
+          preload="auto" 
+          onLoadedMetadata={() => {
+            if (audioRef.current && startSec > 0 && !hasInitialSeekedRef.current) {
+              audioRef.current.currentTime = startSec;
+              hasInitialSeekedRef.current = true;
+            }
+          }}
+          onEnded={() => {
+            if (audioRef.current) {
+              audioRef.current.currentTime = startSec;
+              audioRef.current.play().catch(() => {});
+            }
+          }}
+        />
       )}
 
       {/* Single Active YouTube Iframe (kept in viewport with active z-index so Chromium never throttles or marks as offscreen!) */}
@@ -312,7 +351,7 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
           width="24"
           height="24"
           loading="eager"
-          src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${ytId}&enablejsapi=1&playsinline=1`}
+          src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&controls=0&loop=1&playlist=${ytId}&enablejsapi=1&playsinline=1${startSec > 0 ? `&start=${Math.floor(startSec)}` : ''}`}
           title="Gang Audio Stream"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           className="absolute bottom-0 right-0 w-6 h-6 opacity-[0.01] pointer-events-none overflow-hidden z-10"
@@ -330,41 +369,39 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
       )}
 
       {/* 
-        EXPANDED TRACK DETAILS & AUDIO HUD MODAL 
-        (Requested: กดดูข้อมูลเพิ่มเติมได้ แสดงชื่อเพลงจริง ระดับเสียง ปุ่มปิดสบายตาไม่ติดมุมทั้งมือถือและPC)
+        SLIM, SLEEK CYBER AUDIO HUD (Compact, Low-Profile, Never Fat!)
       */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.94 }}
+            initial={{ opacity: 0, y: 10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 12, scale: 0.94 }}
-            transition={{ type: "spring", stiffness: 350, damping: 26 }}
-            className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 w-[calc(100vw-32px)] sm:w-84 max-w-[340px] rounded-3xl bg-black/95 border border-white/20 backdrop-blur-3xl shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_35px_rgba(255,42,68,0.25)] p-4 sm:p-5 z-50"
+            exit={{ opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="fixed bottom-20 right-4 sm:bottom-24 sm:right-6 w-[calc(100vw-32px)] sm:w-76 max-w-[310px] rounded-2xl bg-black/90 border border-white/15 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9),0_0_25px_rgba(255,42,68,0.2)] p-3 z-50"
           >
-            {/* Modal Header: Title & Spacious Close Button */}
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3.5">
+            {/* Minimal Header */}
+            <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-2.5">
               <div className="flex items-center gap-1.5">
-                <Radio size={14} className="text-[#ff2a44] animate-pulse" />
-                <span className="text-[10px] sm:text-[11px] font-bold tracking-widest text-white/90 uppercase font-mono">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff2a44] animate-pulse" />
+                <span className="text-[10px] font-heading font-bold tracking-wider text-white/80 uppercase">
                   SYNDICATE SOUNDTRACK
                 </span>
               </div>
 
-              {/* Spacious Close Button (Never jammed against the corner!) */}
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer shadow-sm active:scale-90"
-                title="Close Info / ปิดหน้าต่าง"
+                className="w-5 h-5 rounded-full bg-white/10 hover:bg-white/20 text-white/60 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                title="Close / ปิด"
               >
-                <X size={14} />
+                <X size={12} />
               </button>
             </div>
 
-            {/* Album Cover & Track Details */}
-            <div className="flex gap-3.5 items-center mb-4">
-              <div className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden shrink-0 border border-white/20 shadow-md">
+            {/* Horizontal Track Row */}
+            <div className="flex items-center gap-2.5 mb-2.5">
+              <div className="relative w-11 h-11 rounded-xl overflow-hidden shrink-0 border border-white/15 shadow">
                 {trackCover ? (
                   <img 
                     src={trackCover} 
@@ -373,96 +410,69 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-[#ff2a44] to-black flex items-center justify-center">
-                    <Disc size={28} className="text-white" />
-                  </div>
-                )}
-                {isPlaying && (
-                  <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
-                    <div className="flex items-end gap-[2px] h-3">
-                      <span className="w-[2px] h-2 bg-white rounded-full animate-pulse" />
-                      <span className="w-[2px] h-3 bg-[#ff2a44] rounded-full animate-bounce" />
-                      <span className="w-[2px] h-1.5 bg-white rounded-full animate-pulse" />
-                    </div>
+                    <Disc size={20} className="text-white" />
                   </div>
                 )}
               </div>
 
               <div className="flex flex-col min-w-0 flex-1">
-                <h4 className="text-xs sm:text-sm font-extrabold text-white leading-tight line-clamp-2" title={rawTitle}>
+                <h4 className="text-xs font-bold text-white leading-tight truncate" title={rawTitle}>
                   {rawTitle}
                 </h4>
-                <p className="text-[11px] text-white/50 font-medium mt-1 truncate">
-                  {fetchedAuthor || 'Gang Official Anthem'}
+                <p className="text-[10px] text-white/50 truncate mt-0.5">
+                  {fetchedAuthor || 'Gang Audio'}
                 </p>
-                <div className="flex items-center gap-1.5 mt-1.5">
-                  <span className={`w-2 h-2 rounded-full ${isPlaying ? 'bg-emerald-400 animate-ping' : 'bg-white/30'}`} />
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-white/60">
-                    {isPlaying ? 'ACTIVE STREAM' : 'STREAM PAUSED'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Roomy Volume Slider Row */}
-            <div className="p-3 rounded-2xl bg-white/[0.04] border border-white/10 space-y-2 mb-3.5">
-              <div className="flex items-center justify-between text-[11px] font-medium text-white/60">
-                <span className="flex items-center gap-1.5">
-                  <Sliders size={12} className="text-[#ff2a44]" />
-                  <span>MASTER VOLUME</span>
-                </span>
-                <span className="font-mono font-bold text-white/90">
-                  {currentDisplayVolume}%
-                </span>
               </div>
 
-              <div className="flex items-center gap-2.5">
-                <button 
-                  type="button"
-                  onClick={toggleMute} 
-                  className="text-white/70 hover:text-white transition-colors cursor-pointer shrink-0"
-                  title={isMuted ? 'Unmute' : 'Mute'}
-                >
-                  {isMuted || volume === 0 ? (
-                    <VolumeX size={16} className="text-red-400" />
-                  ) : volume < 0.5 ? (
-                    <Volume1 size={16} />
-                  ) : (
-                    <Volume2 size={16} />
-                  )}
-                </button>
-
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="1" 
-                  step="0.02" 
-                  value={isMuted ? 0 : volume}
-                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                  className="flex-1 h-1.5 rounded-full appearance-none bg-white/20 outline-none cursor-pointer accent-[#ff2a44]"
-                />
-              </div>
-            </div>
-
-            {/* Quick Action Footer inside Modal */}
-            <div className="flex items-center justify-between gap-2 pt-1">
+              {/* Compact Play Button */}
               <button
                 type="button"
                 onClick={togglePlay}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-[#ff2a44] to-[#ff3b53] hover:from-[#ff3b53] hover:to-[#ff2a44] text-white text-xs font-bold tracking-wider shadow-lg transition-transform hover:scale-[1.02] active:scale-95 cursor-pointer"
+                className="w-8 h-8 rounded-full bg-gradient-to-r from-[#ff2a44] to-[#ff3b53] text-white flex items-center justify-center shadow-md hover:scale-105 active:scale-95 transition-transform cursor-pointer shrink-0"
+                title={isPlaying ? 'Pause' : 'Play'}
               >
-                {isPlaying ? <Pause size={14} /> : <Play size={14} className="ml-0.5" />}
-                <span>{isPlaying ? 'PAUSE MUSIC' : 'PLAY MUSIC'}</span>
+                {isPlaying ? <Pause size={13} /> : <Play size={13} className="ml-0.5" />}
               </button>
+            </div>
+
+            {/* Slim Volume Line Slider */}
+            <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10">
+              <button 
+                type="button"
+                onClick={toggleMute} 
+                className="text-white/60 hover:text-white transition-colors cursor-pointer shrink-0"
+                title={isMuted ? 'Unmute' : 'Mute'}
+              >
+                {isMuted || volume === 0 ? (
+                  <VolumeX size={13} className="text-red-400" />
+                ) : (
+                  <Volume2 size={13} />
+                )}
+              </button>
+
+              <input 
+                type="range" 
+                min="0" 
+                max="1" 
+                step="0.02" 
+                value={isMuted ? 0 : volume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="flex-1 h-1 rounded-full appearance-none bg-white/20 outline-none cursor-pointer accent-[#ff2a44]"
+              />
+
+              <span className="font-heading font-bold text-[10px] text-white/80 min-w-[26px] text-right">
+                {currentDisplayVolume}%
+              </span>
 
               {ytId && (
                 <a
                   href={`https://www.youtube.com/watch?v=${ytId}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors shrink-0"
-                  title="Open on YouTube"
+                  className="text-white/40 hover:text-white transition-colors ml-1"
+                  title="YouTube"
                 >
-                  <ExternalLink size={14} />
+                  <ExternalLink size={12} />
                 </a>
               )}
             </div>
@@ -471,19 +481,17 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
       </AnimatePresence>
 
       {/* 
-        COMPACT MINI DOCK (เล่นเพลงย่อๆ) 
-        - Compact capsule
-        - Click title/expand icon to open the full detailed card
+        ULTRA-SLIM CYBER CAPSULE DOCK (Aerodynamic, Low-Profile, Beautiful)
       */}
       <motion.div 
         layout
-        className="flex items-center gap-2 sm:gap-2.5 p-1.5 sm:p-2 rounded-full bg-black/85 hover:bg-black/95 border border-white/15 hover:border-[#ff2a44]/50 backdrop-blur-2xl shadow-[0_15px_35px_rgba(0,0,0,0.85),0_0_20px_rgba(255,42,68,0.2)] transition-all duration-300"
+        className="flex items-center gap-2 px-2 py-1 rounded-full bg-black/80 hover:bg-black/95 border border-white/15 hover:border-[#ff2a44]/50 backdrop-blur-2xl shadow-[0_10px_30px_rgba(0,0,0,0.85)] transition-all duration-300 h-9 sm:h-10"
       >
-        {/* Cover Art / Rotating Disc (Click to toggle play/pause) */}
+        {/* Compact Vinyl Disc Thumbnail */}
         <button 
           type="button"
           onClick={togglePlay}
-          className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full cursor-pointer shrink-0 overflow-hidden border border-white/20 shadow-md group/disc"
+          className="relative w-6 h-6 sm:w-7 sm:h-7 rounded-full cursor-pointer shrink-0 overflow-hidden border border-white/20 shadow group/disc"
           title={isPlaying ? 'Pause Music' : 'Play Music'}
         >
           {trackCover ? (
@@ -494,64 +502,55 @@ export default function MusicPlayer({ url, musicTitle, musicCover }) {
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-[#ff2a44] to-black flex items-center justify-center">
-              <Disc size={18} className={`text-white ${isPlaying ? 'animate-spin-slow' : ''}`} />
+              <Disc size={13} className={`text-white ${isPlaying ? 'animate-spin-slow' : ''}`} />
             </div>
           )}
-
-          {/* Center Play/Pause Hover Overlay */}
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/disc:opacity-100 transition-opacity">
-            {isPlaying ? <Pause size={13} className="text-white" /> : <Play size={13} className="text-white ml-0.5" />}
-          </div>
         </button>
 
-        {/* Compact Title Area - Click to open full details */}
+        {/* Slim Song Title & Status (Click to open slim volume HUD) */}
         <div 
           onClick={() => setIsExpanded(!isExpanded)}
-          className="flex flex-col cursor-pointer px-1 max-w-[105px] sm:max-w-[135px] text-left"
-          title="Click to view details & volume / กดดูข้อมูลเพลงและปรับเสียง"
+          className="flex flex-col justify-center cursor-pointer px-0.5 max-w-[95px] sm:max-w-[130px] text-left"
+          title="Click to adjust volume / ปรับระดับเสียง"
         >
-          <span className="text-[11px] sm:text-xs font-bold text-white tracking-wide truncate">
+          <span className="text-[11px] font-semibold text-white truncate leading-none">
             {rawTitle}
           </span>
 
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span className="text-[9px] sm:text-[10px] text-white/50 font-mono tracking-wider">
-              {isPlaying ? `${currentDisplayVolume}% VOL` : 'PAUSED'}
-            </span>
-
-            {/* Micro Equalizer */}
-            {isPlaying && (
-              <div className="flex items-end gap-[1.5px] h-2">
-                <span className="w-[2px] h-1.5 bg-[#ff2a44] rounded-full animate-pulse" />
-                <span className="w-[2px] h-2.5 bg-amber-400 rounded-full animate-bounce" />
-                <span className="w-[2px] h-1 bg-[#ff2a44] rounded-full animate-pulse" />
+          <div className="flex items-center gap-1 mt-0.5">
+            {isPlaying ? (
+              <div className="flex items-end gap-[1px] h-2">
+                <span className="w-[1.5px] h-1.5 bg-[#ff2a44] rounded-full animate-pulse" />
+                <span className="w-[1.5px] h-2 bg-amber-400 rounded-full animate-bounce" />
+                <span className="w-[1.5px] h-1 bg-[#ff2a44] rounded-full animate-pulse" />
               </div>
-            )}
+            ) : null}
+            <span className="text-[8.5px] text-white/50 font-heading font-medium tracking-wider">
+              {isPlaying ? `${currentDisplayVolume}%` : 'PAUSED'}
+            </span>
           </div>
         </div>
 
-        {/* Play / Pause Action Button */}
+        {/* Play / Pause Toggle Button */}
         <button 
           type="button"
           onClick={togglePlay}
-          className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#ff2a44] hover:bg-[#ff3b53] text-white flex items-center justify-center shadow-lg transition-transform hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+          className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#ff2a44] hover:bg-[#ff3b53] text-white flex items-center justify-center shadow transition-transform hover:scale-105 active:scale-95 cursor-pointer shrink-0"
           title={isPlaying ? 'Pause' : 'Play'}
         >
-          {isPlaying ? <Pause size={13} /> : <Play size={13} className="ml-0.5" />}
+          {isPlaying ? <Pause size={11} /> : <Play size={11} className="ml-0.5" />}
         </button>
 
-        {/* Expand / View Details Button */}
+        {/* Slim Expand / Settings Button */}
         <button 
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
-          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border transition-all flex items-center justify-center cursor-pointer shrink-0 ${
-            isExpanded 
-              ? 'bg-white text-black border-white shadow-md' 
-              : 'bg-white/5 hover:bg-white/15 text-white/70 hover:text-white border-white/10'
+          className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+            isExpanded ? 'text-white' : 'text-white/40 hover:text-white'
           }`}
-          title="View Details & Volume / ดูข้อมูลเพลงและปรับเสียง"
+          title="Adjust Volume / ปรับเสียง"
         >
-          {isExpanded ? <X size={13} /> : <Maximize2 size={13} />}
+          <Sliders size={11} />
         </button>
       </motion.div>
 

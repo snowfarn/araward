@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { deleteUploadFile, cleanOrphanUploads } from '@/lib/data';
 
 export async function POST(request) {
   try {
     const formData = await request.formData();
     const file = formData.get('file');
+    const oldUrl = formData.get('oldUrl');
 
     if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
@@ -38,6 +40,14 @@ export async function POST(request) {
 
         fs.writeFileSync(filePath, buffer);
         fileUrl = `/uploads/${fileName}`;
+
+        // If replacing an old uploaded file, delete the old unused file immediately
+        if (oldUrl && typeof oldUrl === 'string' && oldUrl.startsWith('/uploads/')) {
+          deleteUploadFile(oldUrl).catch(() => {});
+        }
+
+        // Background orphan cleanup so storage stays clean
+        cleanOrphanUploads().catch(() => {});
       } catch (fsErr) {
         console.warn('Filesystem write failed, falling back to data URL:', fsErr.message);
       }
@@ -58,3 +68,20 @@ export async function POST(request) {
     return NextResponse.json({ error: error.message || 'Upload failed' }, { status: 500 });
   }
 }
+
+// Explicit DELETE handler for removing an uploaded file
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const fileUrl = searchParams.get('url');
+    if (!fileUrl) {
+      return NextResponse.json({ error: 'URL required' }, { status: 400 });
+    }
+    const deleted = await deleteUploadFile(fileUrl);
+    await cleanOrphanUploads().catch(() => {});
+    return NextResponse.json({ success: true, deleted });
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+

@@ -9,7 +9,8 @@ export default function RobloxWidget({
   userId, 
   primaryColor = '#ff2a44',
   textColor = '#ffffff',
-  cardStyle = 'glass'
+  cardStyle = 'glass',
+  className = ''
 }) {
   const [robloxData, setRobloxData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -54,6 +55,16 @@ export default function RobloxWidget({
 
   const handleClick = (e) => {
     e.stopPropagation();
+    try {
+      if (userId || username) {
+        fetch(`/api/analytics/${userId || username}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ platform: 'roblox' }),
+          keepalive: true
+        }).catch(() => {});
+      }
+    } catch {}
     window.open(targetUrl, '_blank', 'noopener,noreferrer');
   };
 

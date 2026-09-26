@@ -1,4 +1,4 @@
-import { getSiteSettings, getMembers, getRoles } from '@/lib/data';
+import { getSiteSettings, getMembers, getRoles, getSiteViews, incrementSiteViews } from '@/lib/data';
 import ParticleBackground from '@/components/ParticleBackground';
 import RosterContent from '@/components/RosterContent';
 
@@ -6,10 +6,14 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 export default async function MembersPage() {
-  const [settings, allMembers, roles] = await Promise.all([
+  // Increment site-wide visit count asynchronously
+  incrementSiteViews().catch(() => {});
+
+  const [settings, allMembers, roles, siteViews] = await Promise.all([
     getSiteSettings(),
     getMembers(),
-    getRoles()
+    getRoles(),
+    getSiteViews()
   ]);
   const members = allMembers.filter(m => !m.banned);
 
@@ -28,12 +32,16 @@ export default async function MembersPage() {
         color={settings.primaryColor || '#ff2a44'} 
         speed={settings.particleSpeed || 1}
         density={settings.particleDensity || 1}
+        customImages={settings.customParticleImages || []}
+        particleSize={settings.particleSize || 'small'}
+        emitDirection={settings.particleEmitDirection || 'all'}
       />
 
       <RosterContent 
         settings={settings} 
         initialMembers={members} 
         initialRoles={roles} 
+        siteViews={siteViews}
       />
     </main>
   );

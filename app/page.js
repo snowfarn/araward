@@ -1,4 +1,4 @@
-import { getSiteSettings, getMembers } from '@/lib/data';
+import { getSiteSettings, getMembers, incrementSiteViews } from '@/lib/data';
 import ParticleBackground from '@/components/ParticleBackground';
 import HomeContent from '@/components/HomeContent';
 
@@ -9,19 +9,19 @@ export async function generateMetadata() {
   const settings = await getSiteSettings();
   const siteName = settings.siteName || 'Slumzick';
   const description = settings.description || 'ศูนย์รวมสมาชิกสายเลือดแท้ ความเป็นเอกภาพ และพลังที่ไม่มีใครเทียบได้';
-  const bannerImg = settings.logoUrl || settings.backgroundUrl || '/banner.png';
+  const bgImg = settings.backgroundUrl || '/banner.png';
 
   return {
-    title: `${siteName} • Official Syndicate Portal`,
+    title: siteName,
     description: description,
     openGraph: {
-      title: `${siteName.toUpperCase()} SYNDICATE`,
+      title: siteName,
       description: description,
       images: [
         {
-          url: bannerImg,
-          width: 800,
-          height: 800,
+          url: bgImg,
+          width: 1200,
+          height: 630,
           alt: siteName,
         }
       ],
@@ -30,9 +30,9 @@ export async function generateMetadata() {
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${siteName.toUpperCase()} SYNDICATE`,
+      title: siteName,
       description: description,
-      images: [bannerImg],
+      images: [bgImg],
     },
   };
 }
@@ -45,6 +45,7 @@ export async function generateViewport() {
 }
 
 export default async function Home() {
+  incrementSiteViews().catch(() => {});
   const [settings, members] = await Promise.all([
     getSiteSettings(),
     getMembers()
@@ -66,6 +67,9 @@ export default async function Home() {
         color={settings.primaryColor || '#ff2a44'} 
         speed={settings.particleSpeed || 1}
         density={settings.particleDensity || 1}
+        customImages={settings.customParticleImages || []}
+        particleSize={settings.particleSize || 'small'}
+        emitDirection={settings.particleEmitDirection || 'all'}
       />
       
       <HomeContent settings={settings} membersCount={members.length} />

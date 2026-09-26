@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Trophy, Check, Copy } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 export default function DiscordWidget({ 
@@ -9,15 +8,21 @@ export default function DiscordWidget({
   customUsername, 
   customStatusText, 
   customBadge, 
-  avatarFallback,
-  primaryColor = '#ff2a44',
-  textColor = '#ffffff',
-  cardStyle = 'glass'
+  avatarFallback, 
+  avatarDecoration, 
+  showDecoration = true, 
+  primaryColor = '#ff2a44', 
+  textColor = '#ffffff', 
+  cardStyle = 'glass',
+  className = ''
 }) {
   const [lanyardData, setLanyardData] = useState(null);
   const [copied, setCopied] = useState(false);
+  // FIX: Don't use localStorage in useState initializer — causes hydration mismatch
+  // between server render (empty string) and client render (localStorage value).
+  const [cachedStatusText, setCachedStatusText] = useState('');
 
-  // Fetch Lanyard Real-time Discord presence if discordId is provided
+  // Fetch Lanyard real-time Discord presence — client-side only
   useEffect(() => {
     if (!discordId) return;
 
@@ -27,15 +32,15 @@ export default function DiscordWidget({
         const res = await fetch(`https://api.lanyard.rest/v1/users/${discordId}`);
         if (res.ok) {
           const json = await res.json();
-          if (isMounted && json && json.data) {
+          if (isMounted && json?.data) {
             setLanyardData(json.data);
           }
         }
-      } catch (err) {}
+      } catch {}
     };
 
     fetchLanyard();
-    const pollInterval = setInterval(fetchLanyard, 12000);
+    const pollInterval = setInterval(fetchLanyard, 15000);
 
     return () => {
       isMounted = false;
@@ -43,87 +48,120 @@ export default function DiscordWidget({
     };
   }, [discordId]);
 
-  // Status mapping: Keep status alive and consistent when offline instead of flapping to grey offline
+  // Restore cached status from localStorage AFTER mount (client-only, avoids SSR mismatch)
+  useEffect(() => {
+    if (!discordId) return;
+    try {
+      const saved = localStorage.getItem(`discord_status_note_${discordId}`) || '';
+      if (saved) {
+        const timer = setTimeout(() => setCachedStatusText(saved), 0);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
+  }, [discordId]);
+
+  // Real status (do NOT fake online when offline)
   const rawStatus = lanyardData?.discord_status;
-  const discordStatus = (rawStatus && rawStatus !== 'offline') ? rawStatus : 'online';
+  // Only show real status; null/undefined = still loading = show offline pill
+  const discordStatus = rawStatus || 'offline';
+  const isOnline = discordStatus !== 'offline';
 
   const statusColorMap = {
     online: '#23a55a',
     idle: '#f0b232',
     dnd: '#f23f43',
-    offline: '#23a55a', // Retain active color
+    offline: '#80848e',
+  };
+  const statusColor = statusColorMap[discordStatus] || '#80848e';
+
+  const statusLabelMap = {
+    online: 'ออนไลน์',
+    idle: 'ไม่อยู่หน้าจอ',
+    dnd: 'ห้ามรบกวน',
+    offline: 'ออฟไลน์',
   };
 
-  const statusColor = statusColorMap[discordStatus] || '#23a55a';
-
-  // Cached status from localStorage so when user closes Discord, their status never disappears or resets
-  const [cachedStatusText, setCachedStatusText] = useState(() => {
-    if (typeof window !== 'undefined' && discordId) {
-      try {
-        return localStorage.getItem(`discord_status_note_${discordId}`) || '';
-      } catch (e) {
-        return '';
-      }
-    }
-    return '';
-  });
-
-  // Display values with smart fallback chain
-  const displayAvatar = lanyardData?.discord_user?.id && lanyardData?.discord_user?.avatar
-    ? `https://cdn.discordapp.com/avatars/${lanyardData.discord_user.id}/${lanyardData.discord_user.avatar}.${lanyardData.discord_user.avatar.startsWith('a_') ? 'gif' : 'png'}?size=128`
-    : (avatarFallback || "https://cdn.discordapp.com/embed/avatars/0.png");
-
-  const displayUsername = customUsername || lanyardData?.discord_user?.global_name || lanyardData?.discord_user?.username || 'Operative';
-
-  // Custom status / activity text
+  // Live custom status note (Only custom status — do not pull game presence or Spotify as requested)
   const customActivity = lanyardData?.activities?.find(a => a.type === 4)?.state;
-  const spotifyActivity = lanyardData?.spotify ? `Listening to ${lanyardData.spotify.song}` : null;
-  const gameActivity = lanyardData?.activities?.find(a => a.type === 0)?.name ? `Playing ${lanyardData.activities.find(a => a.type === 0).name}` : null;
 
-  // Persist live status so it never gets wiped when user goes offline
+  // Persist live custom status text to localStorage when user is online
   useEffect(() => {
-    const liveNote = customActivity || spotifyActivity || gameActivity;
-    if (liveNote && discordId) {
-      setCachedStatusText(liveNote);
-      try {
-        localStorage.setItem(`discord_status_note_${discordId}`, liveNote);
-      } catch (e) {}
+    if (customActivity && discordId && isOnline) {
+      const timer = setTimeout(() => {
+        setCachedStatusText(customActivity);
+        try {
+          localStorage.setItem(`discord_status_note_${discordId}`, customActivity);
+        } catch {}
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [customActivity, spotifyActivity, gameActivity, discordId]);
+  }, [customActivity, discordId, isOnline]);
 
-  // Priority: live Discord activity -> cached status note -> saved DB status -> display name
-  const validSavedText = (customStatusText && customStatusText !== 'Zick เช่เวงัน') ? customStatusText : null;
-  const displayStatusText = customActivity 
-    || spotifyActivity 
-    || gameActivity 
-    || cachedStatusText 
-    || validSavedText 
-    || lanyardData?.discord_user?.global_name 
-    || lanyardData?.discord_user?.display_name 
-    || customUsername 
-    || 'Active';
+  // Display values with live Discord priority
+  const hasLanyard = Boolean(lanyardData?.discord_user);
 
+  const displayAvatar = hasLanyard && lanyardData.discord_user.avatar
+    ? `https://cdn.discordapp.com/avatars/${lanyardData.discord_user.id}/${lanyardData.discord_user.avatar}.${lanyardData.discord_user.avatar.startsWith('a_') ? 'gif' : 'png'}?size=128`
+    : (avatarFallback || 'https://cdn.discordapp.com/embed/avatars/0.png');
+
+  const displayUsername = hasLanyard
+    ? (lanyardData.discord_user.global_name || lanyardData.discord_user.username || customUsername || 'Operative')
+    : (customUsername || 'Operative');
+
+  // Status text logic: Only custom status note or custom text (no Spotify or game activity)
+  const validSavedText = customStatusText && customStatusText !== 'Zick เช่เวงัน' ? customStatusText : null;
+  const displayStatusText = isOnline
+    ? (customActivity || cachedStatusText || validSavedText || statusLabelMap[discordStatus])
+    : (validSavedText || statusLabelMap[discordStatus]);
+
+  // Clan badge: Prioritize live primary_guild tag from Discord
   const primaryGuild = lanyardData?.discord_user?.primary_guild;
   const clanBadgeIcon = primaryGuild?.badge && primaryGuild?.identity_guild_id
     ? `https://cdn.discordapp.com/clan-badges/${primaryGuild.identity_guild_id}/${primaryGuild.badge}.png`
     : 'https://cdn.discordapp.com/clan-badges/1397489019289469010/8f472817508b16b79411158f14b393f1.png';
-  const badgeText = (customBadge && customBadge !== 'NOPE') ? customBadge : (primaryGuild?.tag || 'REAL');
+
+  const badgeText = hasLanyard
+    ? (primaryGuild?.tag || (customBadge && customBadge !== 'REAL' && customBadge !== 'NOPE' ? customBadge : ''))
+    : ((customBadge && customBadge !== 'NOPE') ? customBadge : (primaryGuild?.tag || ''));
+
+  // Avatar decoration: Prioritize live Discord decoration or clear if unequipped
+  const decorationAsset = lanyardData?.discord_user?.avatar_decoration_data?.asset;
+  const rawDecoration = hasLanyard
+    ? (decorationAsset ? `https://cdn.discordapp.com/avatar-decoration-presets/${decorationAsset}.png?size=160&passthrough=true` : null)
+    : (avatarDecoration || null);
+
+  const decorationUrl = showDecoration
+    ? (rawDecoration && rawDecoration.startsWith('http') 
+        ? rawDecoration.replace('passthrough=false', 'passthrough=true') 
+        : rawDecoration 
+          ? `https://cdn.discordapp.com/avatar-decoration-presets/${rawDecoration}.png?size=160&passthrough=true` 
+          : null)
+    : null;
 
   const handleClick = (e) => {
     e.stopPropagation();
+    try {
+      if (discordId) {
+        fetch(`/api/analytics/${discordId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ platform: 'discord' }),
+          keepalive: true
+        }).catch(() => {});
+      }
+    } catch {}
+
     if (discordId) {
       window.open(`https://discord.com/users/${discordId}`, '_blank');
-    } else {
-      if (typeof navigator !== 'undefined') {
-        navigator.clipboard.writeText(displayUsername);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }
+    } else if (typeof navigator !== 'undefined') {
+      navigator.clipboard.writeText(displayUsername);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const cardBgClasses = cardStyle === 'transparent'
-    ? 'bg-transparent border border-white/5 shadow-none'
+    ? 'bg-transparent border border-white/5'
     : cardStyle === 'ultra_glass'
     ? 'bg-black/15 backdrop-blur-md border border-white/10 hover:border-white/20'
     : cardStyle === 'dark'
@@ -137,19 +175,26 @@ export default function DiscordWidget({
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{ scale: 1.02, y: -1 }}
       whileTap={{ scale: 0.98 }}
-      className={`inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all group select-none max-w-full cursor-pointer relative ${cardBgClasses}`}
-      title={discordId ? "Click to open Discord profile" : "Click to copy Discord tag"}
+      className={`inline-flex items-center gap-3 px-3.5 py-2.5 rounded-2xl transition-all group select-none max-w-full cursor-pointer relative ${cardBgClasses} ${className}`}
+      title={discordId ? 'Click to open Discord profile' : 'Click to copy Discord tag'}
     >
-      {/* Discord Avatar with Real-time Status Indicator Dot */}
-      <div className="relative shrink-0 w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-white/25 to-white/5 shadow-md">
+      {/* Avatar with real-time status dot & Discord decoration */}
+      <div className="relative shrink-0 w-11 h-11 rounded-full shadow-md flex items-center justify-center">
         <img 
           src={displayAvatar} 
           alt={displayUsername} 
-          className="w-full h-full rounded-full object-cover"
+          className="w-full h-full rounded-full object-cover" 
         />
-        {/* Real-time Status Indicator Pill/Dot */}
+        {showDecoration && decorationUrl && (
+          <img 
+            src={decorationUrl} 
+            alt="" 
+            className="absolute -top-[10%] -left-[10%] w-[120%] h-[120%] max-w-none max-h-none pointer-events-none z-10 object-contain drop-shadow-md"
+          />
+        )}
+        {/* Status dot — always shows real status */}
         <span 
-          className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#09090d] flex items-center justify-center shadow-md transition-colors"
+          className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#09090d] flex items-center justify-center shadow-md transition-colors duration-500 z-20"
           style={{ backgroundColor: statusColor }}
         >
           {discordStatus === 'dnd' && (
@@ -161,9 +206,8 @@ export default function DiscordWidget({
         </span>
       </div>
 
-      {/* Identity & Presence Subtext */}
+      {/* Identity & presence */}
       <div className="flex flex-col min-w-0 pr-1 text-left">
-        {/* Top: Clean Username (No User ID, No Real Name) + Real Server Tag with Official Clan Icon */}
         <div className="flex items-center gap-2 flex-wrap">
           <span 
             className="font-bold text-xs sm:text-sm tracking-wide truncate max-w-[150px] sm:max-w-[190px]"
@@ -172,30 +216,27 @@ export default function DiscordWidget({
             {displayUsername}
           </span>
 
-          {/* Official Server / Clan Tag Badge (Real Clan Icon, NO Trophy!) */}
+          {/* Clan/server tag badge */}
           {badgeText && (
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/10 border border-white/15 text-[10px] font-bold text-white/90 shadow-sm shrink-0">
-              {clanBadgeIcon ? (
-                <img 
-                  src={clanBadgeIcon} 
-                  alt="" 
-                  className="w-3.5 h-3.5 object-contain rounded shrink-0" 
-                />
-              ) : (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#5865F2] shrink-0" />
-              )}
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white/10 border border-white/15 text-[10px] font-bold text-white/90 shrink-0">
+              <img 
+                src={clanBadgeIcon} 
+                alt="" 
+                className="w-3.5 h-3.5 object-contain rounded shrink-0" 
+              />
               <span className="tracking-wider uppercase font-mono">{badgeText}</span>
             </div>
           )}
         </div>
 
-        {/* Bottom: Custom Activity / Status Note */}
-        <p className="text-[11px] sm:text-xs text-white/70 font-light truncate max-w-[180px] sm:max-w-[240px] mt-0.5">
+        {/* Status text */}
+        <p className="text-[11px] sm:text-xs font-light truncate max-w-[180px] sm:max-w-[240px] mt-0.5 transition-colors duration-300"
+          style={{ color: isOnline ? 'rgba(255,255,255,0.65)' : '#80848e' }}
+        >
           {displayStatusText}
         </p>
       </div>
 
-      {/* Copy / Link Indicator Badge */}
       {copied && (
         <span className="absolute -top-3 right-3 text-[10px] font-mono px-2 py-0.5 rounded-md bg-green-500 text-black font-bold shadow-md">
           COPIED!

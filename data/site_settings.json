@@ -1,30 +1,63 @@
 {
   "siteName": "Slumzick",
-  "description": "The ultimate syndicate of blood brothers, absolute unity, and unrivaled supremacy.",
+  "description": "DEK SLUMZICK",
   "backgroundUrl": "https://cdn.discordapp.com/attachments/1551149152417873950/1552518394245550181/433eaf346d0a0475c1a2cb228bed9ade.gif?ex=6ab5e6ed&is=6ab4956d&hm=09e212a392e7274e832bd530e979e85cca7030e63a1437e37fb540b3ce6fe201",
   "logoUrl": "https://cdn.discordapp.com/attachments/1551149152417873950/1552517753926058024/5ba12d14aec619633a717f5ed1bc4d2c.png?ex=6ab5e654&is=6ab494d4&hm=db632a6088ae4d0c03c98c5441ab05b79b29347752d9b83dac786c247079420f",
   "primaryColor": "#ff2a44",
   "textColor": "#ffffff",
   "contrastColor": "#ffffff",
   "theme": "dark",
-  "discordInviteUrl": "https://discord.gg/",
+  "discordInviteUrl": "https://discord.gg/6TWAGnrP2t",
   "particleType": "sakura",
   "particleSpeed": 1,
   "particleDensity": 1,
-  "announcementTitle": "TEST",
-  "announcement": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "customParticleImages": [],
+  "particleSize": "small",
+  "particleEmitDirection": "all",
+  "announcementTitle": "ประกาศสำคัญประจำสัปดาห์",
+  "announcement": "ยินดีต้อนรับสู่ศูนย์บัญชาการ Slumzick Syndicate • สมาชิกทุกคนโปรดตรวจสอบรายชื่อและยศตำแหน่งทางการ พร้อมเปิดตัวระบบพันธมิตร Discord Alliance",
   "announcementBannerUrl": "/uploads/1790245341806_ffsbackgrounds.gif",
   "bannerSlideInterval": 5,
   "banners": [
     {
       "id": "banner_1790245341813",
       "url": "/uploads/1790245341806_ffsbackgrounds.gif",
-      "caption": ""
+      "caption": "SLUMZICK SYNDICATE HQ"
     },
     {
       "id": "banner_1790245424525",
       "url": "/uploads/1790245424501_5e5c0fc411760a7adc814c3d045af878.gif",
-      "caption": ""
+      "caption": "BLOOD BROTHERS ON TOP"
+    }
+  ],
+  "partners": [
+    {
+      "id": "partner_1790426683898",
+      "name": "ipts : slumzick v2",
+      "guildId": "883340327459635220",
+      "category": "OFFICIAL ALLIANCE",
+      "inviteUrl": "https://discord.gg/6TWAGnrP2t",
+      "code": "6TWAGnrP2t",
+      "icon": "https://cdn.discordapp.com/icons/883340327459635220/9f3bb1e4e0748c5a8a3dca3ee6b46366.png?size=256",
+      "banner": null,
+      "memberCount": 3849,
+      "presenceCount": 246,
+      "description": "ASDASDASDASDASD",
+      "lastSyncedAt": 1790427119158
+    },
+    {
+      "id": "partner_1790426778976",
+      "name": "United States Armed Forces [USA] ROBLOX",
+      "guildId": "267345360203153430",
+      "category": "OFFICIAL ALLIANCE",
+      "inviteUrl": "https://discord.gg/usa",
+      "code": "usa",
+      "icon": "https://cdn.discordapp.com/icons/267345360203153430/ab4b7029c630b007dc2f7248b2679a9a.png?size=256",
+      "banner": "https://cdn.discordapp.com/banners/267345360203153430/f94219fd3fbddfdabaa3469f417452bf.png?size=1024",
+      "memberCount": 39754,
+      "presenceCount": 3054,
+      "description": "A community based around the group United States Armed Forces [USAF] on ROBLOX",
+      "lastSyncedAt": 1790427119231
     }
   ],
   "socials": {
@@ -33,7 +66,10 @@
     "tiktok": "",
     "instagram": ""
   },
-  "musicUrl": "https://youtu.be/WmlGzY1iWAc?si=iWAkWAVeM1kepsDI",
+  "musicUrl": "https://youtu.be/gt_Oe2yGE4o?si=VauRw5cQssWDLn7w",
   "musicTitle": "",
-  "musicCover": ""
+  "musicCover": "",
+  "musicStartTime": 25,
+  "musicVolume": 30,
+  "siteViews": 67
 }
